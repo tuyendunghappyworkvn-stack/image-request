@@ -3,7 +3,6 @@ import { put } from "@vercel/blob";
 
 export async function POST(req: Request) {
   try {
-    // 1️⃣ Lấy form-data (KHÔNG parse JSON)
     const formData = await req.formData();
 
     const file = formData.get("file") as File;
@@ -11,47 +10,74 @@ export async function POST(req: Request) {
     const jobCountRaw = formData.get("job_count") as string;
 
     if (!file || !style || !jobCountRaw) {
-      return NextResponse.json(
-        { error: "Missing file / style / job_count" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing input" }, { status: 400 });
     }
 
-    // 2️⃣ Ép số job
     const job_count = Number(jobCountRaw);
-    if (isNaN(job_count)) {
-      return NextResponse.json(
-        { error: "job_count must be a number" },
-        { status: 400 }
-      );
-    }
-
-    // 3️⃣ Tạo template_code
     const template_code = `${style}_${job_count}`;
 
-    // 4️⃣ Upload ảnh lên Vercel Blob
+    /* ======================
+       1️⃣ Upload ảnh Blob
+    ====================== */
     const blob = await put(
       `templates/${template_code}-${Date.now()}.png`,
       file,
+      { access: "public", contentType: file.type }
+    );
+
+    const thumbnail = blob.url;
+
+    /* ======================
+       2️⃣ Lấy tenant token
+    ====================== */
+    const tokenRes = await fetch(
+      "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
       {
-        access: "public",
-        contentType: file.type,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          app_id: process.env.LARK_APP_ID,
+          app_secret: process.env.LARK_APP_SECRET,
+        }),
       }
     );
 
-    const thumbnailUrl = blob.url;
+    const tokenJson = await tokenRes.json();
+    const tenantToken = tokenJson.tenant_access_token;
 
-    // 5️⃣ (TẠM THỜI) Trả kết quả – chưa ghi Lark
+    /* ======================
+       3️⃣ Ghi vào Lark Base
+    ====================== */
+    const recordRes = await fetch(
+      `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_BASE_ID}/tables/${process.env.LARK_TABLE_ID}/records`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${tenantToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fields: {
+            template_code,
+            style,
+            job_count,
+            thumbnail,
+            is_active: true,
+          },
+        }),
+      }
+    );
+
+    const recordJson = await recordRes.json();
+
     return NextResponse.json({
       success: true,
       template_code,
-      thumbnail: thumbnailUrl,
+      thumbnail,
+      lark: recordJson,
     });
   } catch (err: any) {
-    console.error("CREATE TEMPLATE ERROR:", err);
-    return NextResponse.json(
-      { error: err.message },
-      { status: 500 }
-    );
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
