@@ -44,7 +44,7 @@ export default function HomePage() {
     if (!jobCount) return;
 
     fetch(
-      `https://n8n.happywork.com.vn/webhook-test/get-templates?job_count=${jobCount}`
+      `https://n8n.happywork.com.vn/webhook/get-templates?job_count=${jobCount}`
     )
       .then((res) => res.json())
       .then((data) => {
