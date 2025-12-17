@@ -16,7 +16,7 @@ export default function HomePage() {
     null
   );
 
-  // fetch templates khi chọn job_count
+  // Load template theo số job
   useEffect(() => {
     if (!jobCount) return;
 
@@ -28,30 +28,31 @@ export default function HomePage() {
         setTemplates(data.templates || []);
         setSelectedTemplate(null);
       })
-      .catch((err) => {
-        console.error("Fetch templates error", err);
-      });
+      .catch((err) => console.error(err));
   }, [jobCount]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">
+    <div className="min-h-screen bg-orange-50 p-6">
+      <div className="max-w-5xl mx-auto bg-white rounded-xl shadow-sm p-8">
+        <h1 className="text-2xl font-bold mb-8 text-gray-900">
           Chọn mẫu ảnh & cấu hình job
         </h1>
 
-        {/* STEP 1: CHỌN SỐ JOB */}
+        {/* STEP 1 */}
         <div className="mb-8">
-          <p className="font-semibold mb-3">1️⃣ Bạn cần bao nhiêu job?</p>
-          <div className="flex gap-3">
-            {[2, 4, 6].map((n) => (
+          <p className="font-semibold mb-3 text-gray-800">
+            1️⃣ Bạn cần bao nhiêu job?
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+            {[1, 2, 3, 4, 5, 6].map((n) => (
               <button
                 key={n}
                 onClick={() => setJobCount(n)}
-                className={`px-5 py-2 rounded border ${
+                className={`px-4 py-2 rounded border font-semibold transition ${
                   jobCount === n
-                    ? "bg-black text-white"
-                    : "bg-white hover:bg-gray-100"
+                    ? "bg-orange-500 text-white border-orange-500"
+                    : "bg-white border-orange-500 text-orange-600 hover:bg-orange-50"
                 }`}
               >
                 {n} job
@@ -60,25 +61,29 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 2: CHỌN ẢNH MẪU */}
+        {/* STEP 2 */}
         {jobCount && (
           <div className="mb-10">
-            <p className="font-semibold mb-3">
+            <p className="font-semibold mb-4 text-gray-800">
               2️⃣ Chọn mẫu ({templates.length} mẫu)
             </p>
+
+            {templates.length === 0 && (
+              <p className="text-gray-500">Chưa có mẫu cho số job này</p>
+            )}
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {templates.map((tpl) => (
                 <div
                   key={tpl.id}
                   onClick={() => setSelectedTemplate(tpl)}
-                  className={`cursor-pointer rounded border p-2 bg-white ${
+                  className={`cursor-pointer rounded-lg border p-2 bg-white transition ${
                     selectedTemplate?.id === tpl.id
-                      ? "ring-2 ring-black"
-                      : ""
+                      ? "ring-2 ring-orange-500"
+                      : "hover:shadow"
                   }`}
                 >
-                  <div className="w-full aspect-square bg-gray-100 flex items-center justify-center">
+                  <div className="aspect-square bg-gray-100 flex items-center justify-center rounded">
                     <img
                       src={tpl.thumbnail}
                       alt={tpl.template_code}
@@ -86,7 +91,7 @@ export default function HomePage() {
                     />
                   </div>
 
-                  <div className="mt-2 text-center text-sm">
+                  <div className="mt-2 text-center text-sm font-medium text-gray-700">
                     {tpl.template_code}
                   </div>
                 </div>
@@ -95,10 +100,10 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* STEP 3: FORM JOB */}
+        {/* STEP 3 */}
         {selectedTemplate && (
-          <div className="bg-white rounded border p-6">
-            <p className="font-semibold mb-4">
+          <div>
+            <p className="font-semibold mb-4 text-gray-800">
               3️⃣ Nhập thông tin {selectedTemplate.job_count} job
             </p>
 
@@ -111,18 +116,18 @@ export default function HomePage() {
                   >
                     <input
                       placeholder={`Công ty ${idx + 1}`}
-                      className="border rounded px-3 py-2"
+                      className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                     />
                     <input
                       placeholder={`Công việc ${idx + 1}`}
-                      className="border rounded px-3 py-2"
+                      className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                     />
                   </div>
                 )
               )}
             </div>
 
-            <button className="mt-6 px-6 py-2 bg-black text-white rounded">
+            <button className="mt-6 px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition">
               Gửi yêu cầu
             </button>
           </div>
