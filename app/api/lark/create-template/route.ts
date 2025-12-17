@@ -1,73 +1,54 @@
 import { NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    // 1️⃣ Lấy form-data (KHÔNG parse JSON)
+    const formData = await req.formData();
 
-    const { style, job_count, thumbnail } = body;
+    const file = formData.get("file") as File;
+    const style = formData.get("style") as string;
+    const jobCountRaw = formData.get("job_count") as string;
 
+    if (!file || !style || !jobCountRaw) {
+      return NextResponse.json(
+        { error: "Missing file / style / job_count" },
+        { status: 400 }
+      );
+    }
+
+    // 2️⃣ Ép số job
+    const job_count = Number(jobCountRaw);
+    if (isNaN(job_count)) {
+      return NextResponse.json(
+        { error: "job_count must be a number" },
+        { status: 400 }
+      );
+    }
+
+    // 3️⃣ Tạo template_code
     const template_code = `${style}_${job_count}`;
 
-    /* 1️⃣ LẤY TENANT ACCESS TOKEN */
-    const tokenRes = await fetch(
-      "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
+    // 4️⃣ Upload ảnh lên Vercel Blob
+    const blob = await put(
+      `templates/${template_code}-${Date.now()}.png`,
+      file,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          app_id: process.env.LARK_APP_ID,
-          app_secret: process.env.LARK_APP_SECRET,
-        }),
+        access: "public",
+        contentType: file.type,
       }
     );
 
-    const tokenData = await tokenRes.json();
+    const thumbnailUrl = blob.url;
 
-    if (!tokenData.tenant_access_token) {
-      return NextResponse.json(
-        { error: "Không lấy được tenant_access_token", tokenData },
-        { status: 500 }
-      );
-    }
-
-    const accessToken = tokenData.tenant_access_token;
-
-    /* 2️⃣ GHI RECORD VÀO LARK BASE */
-    const createRes = await fetch(
-      `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_BASE_ID}/tables/${process.env.LARK_TABLE_ID}/records`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fields: {
-            template_code,
-            style,
-            job_count,
-            thumbnail, // URL ảnh blob
-            is_active: true,
-          },
-        }),
-      }
-    );
-
-    const createData = await createRes.json();
-
-    if (createData.code !== 0) {
-      return NextResponse.json(
-        { error: "Lark Base error", createData },
-        { status: 500 }
-      );
-    }
-
+    // 5️⃣ (TẠM THỜI) Trả kết quả – chưa ghi Lark
     return NextResponse.json({
       success: true,
       template_code,
-      thumbnail,
+      thumbnail: thumbnailUrl,
     });
   } catch (err: any) {
+    console.error("CREATE TEMPLATE ERROR:", err);
     return NextResponse.json(
       { error: err.message },
       { status: 500 }
