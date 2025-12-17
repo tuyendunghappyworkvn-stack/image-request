@@ -4,21 +4,20 @@ import { useState } from "react";
 
 export default function AdminTemplatePage() {
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [templateCode, setTemplateCode] = useState("");
   const [style, setStyle] = useState("");
   const [jobCount, setJobCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
-      alert("Chưa chọn ảnh");
+      alert("Vui lòng chọn ảnh template");
       return;
     }
 
     setLoading(true);
-    setResult("");
 
     const formData = new FormData();
     formData.append("file", file);
@@ -26,72 +25,102 @@ export default function AdminTemplatePage() {
     formData.append("style", style);
     formData.append("job_count", String(jobCount));
 
-    const res = await fetch("/api/lark/create-template", {
+    await fetch("/api/lark/create-template", {
       method: "POST",
       body: formData,
     });
 
-    const data = await res.json();
-    setResult(JSON.stringify(data, null, 2));
     setLoading(false);
+    alert("Upload thành công (test)");
   }
 
   return (
-    <div style={{ padding: 40, maxWidth: 600 }}>
-      <h1>Admin Upload Template</h1>
+    <div className="min-h-screen bg-[#FFF6ED] flex items-center justify-center px-4">
+      <div className="w-full max-w-xl bg-white rounded-2xl shadow-md p-6">
+        <h1 className="text-2xl font-bold mb-1">
+          Admin Upload Template
+        </h1>
+        <p className="text-sm text-gray-500 mb-6">
+          Thêm ảnh mẫu hiển thị cho web chọn job
+        </p>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Ảnh template</label><br />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Upload ảnh */}
+          <div>
+            <label className="font-medium">Ảnh template</label>
+            <div className="mt-2 border-2 border-dashed rounded-xl p-4 text-center cursor-pointer hover:border-orange-400">
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="upload"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  setFile(f || null);
+                  if (f) setPreview(URL.createObjectURL(f));
+                }}
+              />
+              <label htmlFor="upload" className="cursor-pointer">
+                {preview ? (
+                  <img
+                    src={preview}
+                    className="mx-auto rounded-lg max-h-48"
+                  />
+                ) : (
+                  <p className="text-gray-500">
+                    Click để chọn ảnh (PNG / JPG)
+                  </p>
+                )}
+              </label>
+            </div>
+          </div>
 
-        <div>
-          <label>Template code</label><br />
-          <input
-            value={templateCode}
-            onChange={(e) => setTemplateCode(e.target.value)}
-            placeholder="noel_06"
-            required
-          />
-        </div>
+          {/* Template code */}
+          <div>
+            <label className="font-medium">Template code</label>
+            <input
+              className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              placeholder="noel_06"
+              value={templateCode}
+              onChange={(e) => setTemplateCode(e.target.value)}
+              required
+            />
+          </div>
 
-        <div>
-          <label>Style</label><br />
-          <input
-            value={style}
-            onChange={(e) => setStyle(e.target.value)}
-            placeholder="noel / sunshine"
-            required
-          />
-        </div>
+          {/* Style */}
+          <div>
+            <label className="font-medium">Style</label>
+            <input
+              className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              placeholder="noel / sunshine"
+              value={style}
+              onChange={(e) => setStyle(e.target.value)}
+              required
+            />
+          </div>
 
-        <div>
-          <label>Số job</label><br />
-          <input
-            type="number"
-            value={jobCount}
-            onChange={(e) => setJobCount(Number(e.target.value))}
-            required
-          />
-        </div>
+          {/* Job count */}
+          <div>
+            <label className="font-medium">Số job</label>
+            <input
+              type="number"
+              className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              value={jobCount}
+              onChange={(e) => setJobCount(Number(e.target.value))}
+              required
+            />
+          </div>
 
-        <br />
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Đang upload..." : "Upload template"}
-        </button>
-      </form>
-
-      {result && (
-        <pre style={{ marginTop: 20, background: "#f5f5f5", padding: 10 }}>
-          {result}
-        </pre>
-      )}
+          {/* Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition"
+          >
+            {loading ? "Đang upload..." : "Upload template"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
