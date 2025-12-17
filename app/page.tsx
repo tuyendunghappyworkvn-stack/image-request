@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+/* ===== TYPES ===== */
 type Template = {
   id: string;
   template_code: string;
@@ -9,14 +10,36 @@ type Template = {
   thumbnail: string;
 };
 
+type JobOption = {
+  id: string;
+  company: string;
+  job: string;
+};
+
+type SelectedJob = {
+  company: string;
+  job: string;
+};
+
 export default function HomePage() {
+  /* ===== STATE ===== */
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(
-    null
-  );
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<Template | null>(null);
 
-  // Load template theo số job
+  const [jobOptions, setJobOptions] = useState<JobOption[]>([]);
+  const [selectedJobs, setSelectedJobs] = useState<SelectedJob[]>([]);
+
+  /* ===== LOAD JOB OPTIONS (FROM N8N → LARK BASE) ===== */
+  useEffect(() => {
+    fetch("https://n8n.happywork.com.vn/webhook/get-jobs")
+      .then((res) => res.json())
+      .then((data) => setJobOptions(data.jobs || []))
+      .catch(console.error);
+  }, []);
+
+  /* ===== LOAD TEMPLATES BY JOB COUNT ===== */
   useEffect(() => {
     if (!jobCount) return;
 
@@ -28,8 +51,20 @@ export default function HomePage() {
         setTemplates(data.templates || []);
         setSelectedTemplate(null);
       })
-      .catch((err) => console.error(err));
+      .catch(console.error);
   }, [jobCount]);
+
+  /* ===== INIT SELECTED JOBS WHEN TEMPLATE CHANGES ===== */
+  useEffect(() => {
+    if (!selectedTemplate) return;
+
+    setSelectedJobs(
+      Array.from({ length: selectedTemplate.job_count }).map(() => ({
+        company: "",
+        job: "",
+      }))
+    );
+  }, [selectedTemplate]);
 
   return (
     <div className="min-h-screen bg-orange-50 p-6">
@@ -38,7 +73,7 @@ export default function HomePage() {
           Chọn mẫu ảnh & cấu hình job
         </h1>
 
-        {/* STEP 1 */}
+        {/* ===== STEP 1: JOB COUNT ===== */}
         <div className="mb-8">
           <p className="font-semibold mb-3 text-gray-800">
             1️⃣ Bạn cần bao nhiêu job?
@@ -61,7 +96,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 2 */}
+        {/* ===== STEP 2: TEMPLATE SELECT ===== */}
         {jobCount && (
           <div className="mb-10">
             <p className="font-semibold mb-4 text-gray-800">
@@ -100,31 +135,60 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* STEP 3 */}
+        {/* ===== STEP 3: JOB CONFIG ===== */}
         {selectedTemplate && (
           <div>
             <p className="font-semibold mb-4 text-gray-800">
-              3️⃣ Nhập thông tin {selectedTemplate.job_count} job
+              3️⃣ Chọn thông tin {selectedTemplate.job_count} job
             </p>
 
             <div className="space-y-4">
-              {Array.from({ length: selectedTemplate.job_count }).map(
-                (_, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+              {selectedJobs.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  {/* COMPANY */}
+                  <select
+                    value={item.company}
+                    onChange={(e) => {
+                      const next = [...selectedJobs];
+                      next[idx] = { company: e.target.value, job: "" };
+                      setSelectedJobs(next);
+                    }}
+                    className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
                   >
-                    <input
-                      placeholder={`Công ty ${idx + 1}`}
-                      className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                    <input
-                      placeholder={`Công việc ${idx + 1}`}
-                      className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-                )
-              )}
+                    <option value="">Chọn công ty</option>
+                    {[...new Set(jobOptions.map((j) => j.company))].map(
+                      (company) => (
+                        <option key={company} value={company}>
+                          {company}
+                        </option>
+                      )
+                    )}
+                  </select>
+
+                  {/* JOB */}
+                  <select
+                    value={item.job}
+                    onChange={(e) => {
+                      const next = [...selectedJobs];
+                      next[idx].job = e.target.value;
+                      setSelectedJobs(next);
+                    }}
+                    className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  >
+                    <option value="">Chọn công việc</option>
+                    {jobOptions
+                      .filter((j) => j.company === item.company)
+                      .map((j) => (
+                        <option key={j.id} value={j.job}>
+                          {j.job}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              ))}
             </div>
 
             <button className="mt-6 px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition">
