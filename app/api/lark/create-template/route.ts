@@ -1,56 +1,76 @@
-import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
-const APP_ID = process.env.LARK_APP_ID!;
-const TABLE_ID = process.env.LARK_TABLE_ID!;
-const TENANT_TOKEN = process.env.LARK_TENANT_TOKEN!;
-
 export async function POST(req: Request) {
-  const formData = await req.formData();
+  try {
+    const body = await req.json();
 
-  const file = formData.get("file") as File;
-  const templateCode = formData.get("template_code") as string;
-  const style = formData.get("style") as string;
-  const jobCount = Number(formData.get("job_count"));
+    const { style, job_count, thumbnail } = body;
 
-  if (!file) {
-    return NextResponse.json({ error: "No file" }, { status: 400 });
-  }
+    const template_code = `${style}_${job_count}`;
 
-  // 1. Upload ảnh lên Vercel Blob (public)
-  const blob = await put(
-    `templates/${templateCode}-${Date.now()}.png`,
-    file,
-    { access: "public" }
-  );
+    /* 1️⃣ LẤY TENANT ACCESS TOKEN */
+    const tokenRes = await fetch(
+      "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          app_id: process.env.LARK_APP_ID,
+          app_secret: process.env.LARK_APP_SECRET,
+        }),
+      }
+    );
 
-  // 2. Ghi vào Lark Base
-  const larkRes = await fetch(
-    `https://open.larksuite.com/open-apis/bitable/v1/apps/${APP_ID}/tables/${TABLE_ID}/records`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${TENANT_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        fields: {
-          template_code: templateCode,
-          style: style,
-          job_count: jobCount,
-          thumbnail: blob.url,
-          is_active: true,
-        },
-      }),
+    const tokenData = await tokenRes.json();
+
+    if (!tokenData.tenant_access_token) {
+      return NextResponse.json(
+        { error: "Không lấy được tenant_access_token", tokenData },
+        { status: 500 }
+      );
     }
-  );
 
-  const larkData = await larkRes.json();
+    const accessToken = tokenData.tenant_access_token;
 
-  return NextResponse.json({
-    success: true,
-    template_code: templateCode,
-    thumbnail: blob.url,
-    lark: larkData,
-  });
+    /* 2️⃣ GHI RECORD VÀO LARK BASE */
+    const createRes = await fetch(
+      `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_BASE_ID}/tables/${process.env.LARK_TABLE_ID}/records`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fields: {
+            template_code,
+            style,
+            job_count,
+            thumbnail, // URL ảnh blob
+            is_active: true,
+          },
+        }),
+      }
+    );
+
+    const createData = await createRes.json();
+
+    if (createData.code !== 0) {
+      return NextResponse.json(
+        { error: "Lark Base error", createData },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      template_code,
+      thumbnail,
+    });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message },
+      { status: 500 }
+    );
+  }
 }
