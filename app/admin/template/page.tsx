@@ -5,7 +5,6 @@ import { useState } from "react";
 export default function AdminTemplatePage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [templateCode, setTemplateCode] = useState("");
   const [style, setStyle] = useState("");
   const [jobCount, setJobCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
@@ -13,9 +12,11 @@ export default function AdminTemplatePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
-      alert("Vui lòng chọn ảnh template");
+      alert("Vui lòng chọn ảnh");
       return;
     }
+
+    const templateCode = `${style}_${jobCount}`;
 
     setLoading(true);
 
@@ -25,35 +26,35 @@ export default function AdminTemplatePage() {
     formData.append("style", style);
     formData.append("job_count", String(jobCount));
 
-    await fetch("/api/lark/create-template", {
+    const res = await fetch("/api/lark/create-template", {
       method: "POST",
       body: formData,
     });
 
+    const data = await res.json();
+    console.log(data);
+
     setLoading(false);
-    alert("Upload thành công (test)");
+    alert("Upload xong, mở DevTools > Network để xem response");
   }
 
   return (
     <div className="min-h-screen bg-[#FFF6ED] flex items-center justify-center px-4">
       <div className="w-full max-w-xl bg-white rounded-2xl shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-1">
-          Admin Upload Template
-        </h1>
+        <h1 className="text-2xl font-bold mb-1">Admin Upload Template</h1>
         <p className="text-sm text-gray-500 mb-6">
-          Thêm ảnh mẫu hiển thị cho web chọn job
+          Nhập style + số job → tự sinh template_code
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Upload ảnh */}
           <div>
             <label className="font-medium">Ảnh template</label>
-            <div className="mt-2 border-2 border-dashed rounded-xl p-4 text-center cursor-pointer hover:border-orange-400">
+            <div className="mt-2 border-2 border-dashed rounded-xl p-4 text-center hover:border-orange-400">
               <input
                 type="file"
                 accept="image/*"
-                className="hidden"
                 id="upload"
+                className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   setFile(f || null);
@@ -75,23 +76,10 @@ export default function AdminTemplatePage() {
             </div>
           </div>
 
-          {/* Template code */}
-          <div>
-            <label className="font-medium">Template code</label>
-            <input
-              className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-              placeholder="noel_06"
-              value={templateCode}
-              onChange={(e) => setTemplateCode(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Style */}
           <div>
             <label className="font-medium">Style</label>
             <input
-              className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="mt-1 w-full border rounded-lg px-3 py-2"
               placeholder="noel / sunshine"
               value={style}
               onChange={(e) => setStyle(e.target.value)}
@@ -99,23 +87,21 @@ export default function AdminTemplatePage() {
             />
           </div>
 
-          {/* Job count */}
           <div>
             <label className="font-medium">Số job</label>
             <input
               type="number"
-              className="mt-1 w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              className="mt-1 w-full border rounded-lg px-3 py-2"
               value={jobCount}
               onChange={(e) => setJobCount(Number(e.target.value))}
               required
             />
           </div>
 
-          {/* Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl"
           >
             {loading ? "Đang upload..." : "Upload template"}
           </button>
