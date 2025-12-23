@@ -60,7 +60,7 @@ export async function POST(req: Request) {
           fields: {
             template_code: templateCode,
             style,
-            job_count: jobCount,
+            job_count: Number(jobCount),
             thumbnail: blob.url,
             is_active: true,
           },
