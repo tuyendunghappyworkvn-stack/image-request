@@ -4,7 +4,7 @@ const BASE_ID = "GfsDbDUd5aRCNSsRzmKlURVagQg";
 const TABLE_ID = "tblASMdXPDdQjAW5";
 
 /* =========================
-   GET TENANT TOKEN
+   GET TENANT ACCESS TOKEN
 ========================= */
 async function getTenantToken() {
   const res = await fetch(
@@ -20,17 +20,20 @@ async function getTenantToken() {
   );
 
   const data = await res.json();
-  if (!data.tenant_access_token) {
-    throw new Error("Cannot get tenant token");
+
+  if (!data?.tenant_access_token) {
+    console.error("❌ Cannot get tenant token:", data);
+    throw new Error("Cannot get tenant access token");
   }
+
   return data.tenant_access_token;
 }
 
 /* =========================
-   GET ALL RECORDS (PAGINATION)
+   FETCH ALL RECORDS (PAGINATION)
 ========================= */
 async function fetchAllRecords(token: string) {
-  let allItems: any[] = [];
+  let allRecords: any[] = [];
   let pageToken: string | undefined = undefined;
   let hasMore = true;
 
@@ -40,30 +43,37 @@ async function fetchAllRecords(token: string) {
       (pageToken ? `&page_token=${pageToken}` : "");
 
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       cache: "no-store",
     });
 
     const json = await res.json();
 
     const items = json?.data?.items || [];
-    allItems = allItems.concat(items);
+    allRecords = allRecords.concat(items);
 
-    hasMore = json?.data?.has_more;
+    hasMore = json?.data?.has_more === true;
     pageToken = json?.data?.page_token;
   }
 
-  return allItems;
+  return allRecords;
 }
 
 /* =========================
-   API
+   GET COMPANY + JOB OPTIONS
 ========================= */
 export async function GET() {
   try {
     const token = await getTenantToken();
+
+    // ✅ LẤY TOÀN BỘ RECORDS
     const records = await fetchAllRecords(token);
 
+    // =========================
+    // BUILD DATA
+    // =========================
     const companySet = new Set<string>();
     const jobsByCompany: Record<string, string[]> = {};
 
@@ -85,15 +95,17 @@ export async function GET() {
       }
     });
 
+    const companies = Array.from(companySet).map((name) => ({
+      id: name, // dùng company name làm id (đúng DB hiện tại)
+      name,
+    }));
+
     return NextResponse.json({
-      companies: Array.from(companySet).map((name) => ({
-        id: name,
-        name,
-      })),
+      companies,
       jobsByCompany,
     });
   } catch (err) {
-    console.error(err);
+    console.error("❌ API ERROR:", err);
     return NextResponse.json(
       { companies: [], jobsByCompany: {} },
       { status: 500 }
