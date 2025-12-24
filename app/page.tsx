@@ -23,6 +23,12 @@ export default function HomePage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(false);
 
+  /* =====================
+     CONTACT INFO
+  ====================== */
+  const [email, setEmail] = useState("");
+  const [zalo, setZalo] = useState("");
+
   // 👉 CHỌN TEMPLATE
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template | null>(null);
@@ -239,9 +245,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 3 */}
+        {/* STEP 3 + STEP 4 */}
         {selectedTemplate && (
           <div className="mt-10">
+            {/* STEP 3 */}
             <h3 className="text-lg font-semibold mb-4">
               3️⃣ Chọn thông tin công việc
             </h3>
@@ -256,7 +263,6 @@ export default function HomePage() {
                     key={index}
                     className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
                   >
-                    {/* COMPANY */}
                     <select
                       className="border rounded px-3 py-2"
                       value={job.company_name}
@@ -278,7 +284,6 @@ export default function HomePage() {
                       ))}
                     </select>
 
-                    {/* JOB */}
                     <select
                       className="border rounded px-3 py-2"
                       value={job.position_name}
@@ -290,10 +295,7 @@ export default function HomePage() {
                         setJobs(newJobs);
                       }}
                     >
-                      <option value="">
-                        Chọn công việc
-                      </option>
-
+                      <option value="">Chọn công việc</option>
                       {jobOptions.map((j) => (
                         <option key={j} value={j}>
                           {j}
@@ -303,6 +305,31 @@ export default function HomePage() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* STEP 4 */}
+            <div className="mt-10">
+              <h3 className="text-lg font-semibold mb-4">
+                4️⃣ Thông tin liên hệ
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg">
+                <input
+                  type="email"
+                  placeholder="Nhập email liên hệ"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="border rounded px-3 py-2"
+                />
+
+                <input
+                  type="text"
+                  placeholder="Nhập số Zalo"
+                  value={zalo}
+                  onChange={(e) => setZalo(e.target.value)}
+                  className="border rounded px-3 py-2"
+                />
+              </div>
             </div>
           </div>
         )}
