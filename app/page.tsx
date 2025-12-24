@@ -11,6 +11,7 @@ type Template = {
 type Option = {
   id: string;
   name: string;
+  company_id?: string; // dùng cho position
 };
 
 type JobInput = {
@@ -210,93 +211,93 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 3 – JOB FORM */}
-{selectedTemplate && (
-  <div className="mt-10">
-    <h3 className="text-lg font-semibold mb-4">
-      3️⃣ Chọn thông tin công việc
-    </h3>
+        {/* STEP 3 – JOB FORM (ĐÃ SỬA CHUẨN) */}
+        {selectedTemplate && (
+          <div className="mt-10">
+            <h3 className="text-lg font-semibold mb-4">
+              3️⃣ Chọn thông tin công việc
+            </h3>
 
-    <div className="space-y-3">
-      {jobs.map((job, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
-        >
-          {/* ===== SELECT CÔNG TY ===== */}
-          <select
-            className="border rounded px-3 py-2"
-            value={job.company_id}
-            onChange={(e) => {
-              const companyId = e.target.value;
-              const company = companies.find(
-                (c) => c.id === companyId
-              );
+            <div className="space-y-3">
+              {jobs.map((job, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
+                >
+                  {/* SELECT CÔNG TY */}
+                  <select
+                    className="border rounded px-3 py-2"
+                    value={job.company_id}
+                    onChange={(e) => {
+                      const companyId = e.target.value;
+                      const company = companies.find(
+                        (c) => c.id === companyId
+                      );
 
-              const newJobs = [...jobs];
-              newJobs[index] = {
-                ...newJobs[index],
-                company_id: companyId,
-                company_name: company?.name || "",
-                position_id: "",
-                position_name: "",
-              };
+                      const newJobs = [...jobs];
+                      newJobs[index] = {
+                        ...newJobs[index],
+                        company_id: companyId,
+                        company_name: company?.name || "",
+                        position_id: "",
+                        position_name: "",
+                      };
+                      setJobs(newJobs);
+                    }}
+                  >
+                    <option value="">Chọn công ty</option>
+                    {companies.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
 
-              setJobs(newJobs);
-            }}
-          >
-            <option value="">Chọn công ty</option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+                  {/* SELECT CÔNG VIỆC */}
+                  <select
+                    className="border rounded px-3 py-2"
+                    value={job.position_id}
+                    disabled={!job.company_id}
+                    onChange={(e) => {
+                      const positionId = e.target.value;
+                      const position = positions.find(
+                        (p) => p.id === positionId
+                      );
 
-          {/* ===== SELECT CÔNG VIỆC ===== */}
-          <select
-            className="border rounded px-3 py-2"
-            value={job.position_id}
-            disabled={!job.company_id}
-            onChange={(e) => {
-              const positionId = e.target.value;
-              const position = positions.find(
-                (p) => p.id === positionId
-              );
+                      const newJobs = [...jobs];
+                      newJobs[index] = {
+                        ...newJobs[index],
+                        position_id: positionId,
+                        position_name: position?.name || "",
+                      };
+                      setJobs(newJobs);
+                    }}
+                  >
+                    <option value="">
+                      {job.company_id
+                        ? "Chọn công việc"
+                        : "Chọn công ty trước"}
+                    </option>
 
-              const newJobs = [...jobs];
-              newJobs[index] = {
-                ...newJobs[index],
-                position_id: positionId,
-                position_name: position?.name || "",
-              };
-
-              setJobs(newJobs);
-            }}
-          >
-            <option value="">
-              {job.company_id
-                ? "Chọn công việc"
-                : "Chọn công ty trước"}
-            </option>
-
-            {positions
-              .filter(
-                (p) => p.company_id === job.company_id
-              )
-              .map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
+                    {positions
+                      .filter(
+                        (p) =>
+                          p.company_id === job.company_id
+                      )
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               ))}
-          </select>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+            </div>
+          </div>
+        )}
+      </div>
 
-      {/* PREVIEW – TO GẤP 3, THEO CHUỘT */}
+      {/* PREVIEW – THEO CHUỘT */}
       {hoverImage && (
         <div
           className="fixed z-50 pointer-events-none"
