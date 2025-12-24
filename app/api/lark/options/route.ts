@@ -4,16 +4,14 @@ const BASE_ID = "GfsDbDUd5aRCNSsRzmKlURVagQg";
 const TABLE_ID = "tblASMdXPDdQjAW5";
 
 /* =========================
-   GET TENANT ACCESS TOKEN
+   GET TENANT TOKEN
 ========================= */
 async function getTenantToken() {
   const res = await fetch(
     "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
     {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         app_id: process.env.LARK_APP_ID,
         app_secret: process.env.LARK_APP_SECRET,
@@ -22,38 +20,50 @@ async function getTenantToken() {
   );
 
   const data = await res.json();
-
-  if (!data?.tenant_access_token) {
-    console.error("❌ Cannot get tenant token:", data);
-    throw new Error("Cannot get tenant access token");
+  if (!data.tenant_access_token) {
+    throw new Error("Cannot get tenant token");
   }
-
   return data.tenant_access_token;
 }
 
 /* =========================
-   GET COMPANY + JOB OPTIONS
+   GET ALL RECORDS (PAGINATION)
+========================= */
+async function fetchAllRecords(token: string) {
+  let allItems: any[] = [];
+  let pageToken: string | undefined = undefined;
+  let hasMore = true;
+
+  while (hasMore) {
+    const url =
+      `https://open.larksuite.com/open-apis/bitable/v1/apps/${BASE_ID}/tables/${TABLE_ID}/records?page_size=500` +
+      (pageToken ? `&page_token=${pageToken}` : "");
+
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    const json = await res.json();
+
+    const items = json?.data?.items || [];
+    allItems = allItems.concat(items);
+
+    hasMore = json?.data?.has_more;
+    pageToken = json?.data?.page_token;
+  }
+
+  return allItems;
+}
+
+/* =========================
+   API
 ========================= */
 export async function GET() {
   try {
     const token = await getTenantToken();
+    const records = await fetchAllRecords(token);
 
-    const res = await fetch(
-      `https://open.larksuite.com/open-apis/bitable/v1/apps/${BASE_ID}/tables/${TABLE_ID}/records?page_size=500`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        cache: "no-store",
-      }
-    );
-
-    const json = await res.json();
-    const records = json?.data?.items || [];
-
-    // =========================
-    // BUILD DATA
-    // =========================
     const companySet = new Set<string>();
     const jobsByCompany: Record<string, string[]> = {};
 
@@ -75,17 +85,15 @@ export async function GET() {
       }
     });
 
-    const companies = Array.from(companySet).map((name) => ({
-      id: name,   // dùng name làm id (đúng với DB hiện tại)
-      name,
-    }));
-
     return NextResponse.json({
-      companies,
+      companies: Array.from(companySet).map((name) => ({
+        id: name,
+        name,
+      })),
       jobsByCompany,
     });
   } catch (err) {
-    console.error("❌ API ERROR:", err);
+    console.error(err);
     return NextResponse.json(
       { companies: [], jobsByCompany: {} },
       { status: 500 }
