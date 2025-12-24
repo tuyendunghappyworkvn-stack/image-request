@@ -23,12 +23,11 @@ async function getTenantToken() {
 
   const data = await res.json();
 
-  if (!data.tenant_access_token) {
+  if (!data?.tenant_access_token) {
     console.error("❌ Cannot get tenant token:", data);
     throw new Error("Cannot get tenant access token");
   }
 
-  console.log("✅ TENANT TOKEN OK");
   return data.tenant_access_token;
 }
 
@@ -50,12 +49,6 @@ export async function GET() {
     );
 
     const json = await res.json();
-
-    console.log(
-      "📦 LARK RESPONSE =",
-      JSON.stringify(json?.data?.items?.length)
-    );
-
     const records = json?.data?.items || [];
 
     // =========================
@@ -83,7 +76,7 @@ export async function GET() {
     });
 
     const companies = Array.from(companySet).map((name) => ({
-      id: name,
+      id: name,   // dùng name làm id (đúng với DB hiện tại)
       name,
     }));
 
