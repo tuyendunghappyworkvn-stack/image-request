@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const res = await fetch(
-      "https://n8n.happywork.com.vn/webhook/tao-list-job",
+      "https://n8n.happywork.com.vn/webhook-test/tao-list-job",
       {
         method: "POST",
         headers: {
