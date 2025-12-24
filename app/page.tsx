@@ -419,7 +419,7 @@ export default function HomePage() {
                   Tạo ảnh
                 </button>
               </div>
-            </div>
+            </div> 
           </div>
         )}
       </div>
