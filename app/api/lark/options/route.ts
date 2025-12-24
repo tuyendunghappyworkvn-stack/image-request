@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 
-/**
- * ENV
- */
-const LARK_BASE_ID = process.env.LARK_BASE_ID!;
-const LARK_APP_ID = process.env.LARK_APP_ID!;
-const LARK_APP_SECRET = process.env.LARK_APP_SECRET!;
-const TABLE_ID = "tblAsMdxPDDQJAWS"; // bảng có cột Công ty + Công việc
+const BASE_ID = "GfsDbDUd5aRCNSsRzmKlURVagQg";
+const TABLE_ID = "tblASMdXPDdQjAW5";
 
-/**
- * LẤY TENANT ACCESS TOKEN (ĐÚNG CHUẨN LARK)
- */
+/* =========================
+   LẤY TENANT ACCESS TOKEN
+========================= */
 async function getTenantToken() {
   const res = await fetch(
     "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
@@ -20,8 +15,8 @@ async function getTenantToken() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        app_id: LARK_APP_ID,
-        app_secret: LARK_APP_SECRET,
+        app_id: process.env.LARK_APP_ID,
+        app_secret: process.env.LARK_APP_SECRET,
       }),
     }
   );
@@ -29,27 +24,24 @@ async function getTenantToken() {
   const data = await res.json();
 
   if (!data.tenant_access_token) {
-    console.error("❌ LARK TOKEN ERROR:", data);
-    throw new Error("Cannot get tenant_access_token");
+    console.error("❌ Lỗi lấy tenant token:", data);
+    throw new Error("Cannot get tenant access token");
   }
+
+  console.log("✅ TENANT TOKEN OK");
 
   return data.tenant_access_token;
 }
 
-/**
- * API GET /api/lark/options
- */
+/* =========================
+   GET OPTIONS
+========================= */
 export async function GET() {
   try {
-    // 👉 LẤY TOKEN
     const token = await getTenantToken();
 
-    // 👉 LOG TOKEN ĐỂ DEBUG (XEM TRONG VERCEL LOGS)
-    console.log("✅ LARK TOKEN =", token);
-
-    // 👉 GỌI BITABLE
     const res = await fetch(
-      `https://open.larksuite.com/open-apis/bitable/v1/apps/${LARK_BASE_ID}/tables/${TABLE_ID}/records?page_size=500`,
+      `https://open.larksuite.com/open-apis/bitable/v1/apps/${BASE_ID}/tables/${TABLE_ID}/records?page_size=500`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,7 +52,6 @@ export async function GET() {
 
     const json = await res.json();
 
-    // 👉 LOG RESPONSE LARK (CỰC QUAN TRỌNG)
     console.log("📦 LARK RESPONSE =", JSON.stringify(json));
 
     const records = json?.data?.items || [];
@@ -71,7 +62,6 @@ export async function GET() {
     records.forEach((item: any) => {
       const fields = item.fields || {};
 
-      // ⚠️ TÊN CỘT PHẢI TRÙNG 100% VỚI LARK
       if (fields["Công ty"]) {
         companySet.add(fields["Công ty"]);
       }
@@ -91,9 +81,8 @@ export async function GET() {
         name,
       })),
     });
-  } catch (error: any) {
-    console.error("🔥 API ERROR:", error);
-
+  } catch (err) {
+    console.error("❌ API ERROR", err);
     return NextResponse.json(
       { companies: [], positions: [] },
       { status: 500 }
