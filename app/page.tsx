@@ -96,7 +96,7 @@ export default function HomePage() {
                         : "hover:shadow"
                     }`}
                 >
-                  {/* Ảnh thumbnail – HIỂN THỊ ĐẦY ĐỦ */}
+                  {/* Thumbnail: hiển thị FULL, không cắt */}
                   <img
                     src={tpl.thumbnail}
                     alt={tpl.template_code}
@@ -107,9 +107,17 @@ export default function HomePage() {
                     {tpl.template_code}
                   </div>
 
-                  {/* Hover xem ảnh FULL */}
-                  <div className="absolute left-1/2 top-0 z-50 hidden -translate-x-1/2 -translate-y-full group-hover:block">
-                    <div className="bg-white p-2 rounded shadow-xl max-w-[480px] max-h-[80vh] overflow-auto">
+                  {/* HOVER: xem ảnh FULL TO */}
+                  <div
+                    className="absolute left-1/2 top-0 z-50 hidden 
+                               -translate-x-1/2 -translate-y-full 
+                               group-hover:block"
+                  >
+                    <div
+                      className="bg-white p-3 rounded shadow-2xl
+                                 w-[80vw] max-w-[900px]
+                                 max-h-[90vh] overflow-auto"
+                    >
                       <img
                         src={tpl.thumbnail}
                         alt="Preview full"
