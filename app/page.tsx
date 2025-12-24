@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Template = {
   template_code: string;
@@ -33,6 +33,13 @@ export default function HomePage() {
   // options từ Lark
   const [companies, setCompanies] = useState<Option[]>([]);
   const [positions, setPositions] = useState<Option[]>([]);
+
+  /* =====================
+     PREVIEW STATE
+  ====================== */
+  const [hoverImage, setHoverImage] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const hoverTimer = useRef<NodeJS.Timeout | null>(null);
 
   /* =====================
      LOAD TEMPLATE THEO JOB
@@ -69,6 +76,29 @@ export default function HomePage() {
         setPositions(data.positions || []);
       });
   }, []);
+
+  /* =====================
+     HOVER HANDLERS
+  ====================== */
+  function handleMouseEnter(
+    e: React.MouseEvent,
+    thumbnail: string
+  ) {
+    const { clientX, clientY } = e;
+
+    hoverTimer.current = setTimeout(() => {
+      setMousePos({ x: clientX + 20, y: clientY + 20 });
+      setHoverImage(thumbnail);
+    }, 200);
+  }
+
+  function handleMouseLeave() {
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+    setHoverImage(null);
+  }
 
   return (
     <main className="min-h-screen bg-[#FFF6ED] p-8">
@@ -125,7 +155,6 @@ export default function HomePage() {
                   key={tpl.template_code}
                   onClick={() => {
                     setSelectedTemplate(tpl);
-
                     if (jobCount) {
                       setJobs(
                         Array.from({ length: jobCount }, () => ({
@@ -137,7 +166,11 @@ export default function HomePage() {
                       );
                     }
                   }}
-                  className={`relative border rounded-lg cursor-pointer transition group
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(e, tpl.thumbnail)
+                  }
+                  onMouseLeave={handleMouseLeave}
+                  className={`border rounded-lg cursor-pointer transition
                     ${
                       isSelected
                         ? "border-orange-500 ring-2 ring-orange-300"
@@ -149,24 +182,8 @@ export default function HomePage() {
                     alt={tpl.template_code}
                     className="w-full h-40 object-contain bg-gray-50 rounded"
                   />
-
                   <div className="p-2 text-center font-medium">
                     {tpl.template_code}
-                  </div>
-
-                  {/* Hover ảnh full */}
-                  <div className="absolute left-1/2 top-0 z-50 hidden 
-                                  -translate-x-1/2 -translate-y-full 
-                                  group-hover:block">
-                    <div className="bg-white p-3 rounded shadow-2xl
-                                    w-[80vw] max-w-[900px]
-                                    max-h-[90vh] overflow-auto">
-                      <img
-                        src={tpl.thumbnail}
-                        alt="Preview full"
-                        className="w-full h-auto"
-                      />
-                    </div>
                   </div>
                 </div>
               );
@@ -187,7 +204,6 @@ export default function HomePage() {
                   key={index}
                   className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
                 >
-                  {/* CÔNG TY – BÊN TRÁI */}
                   <select
                     className="border rounded px-3 py-2"
                     value={job.company_id}
@@ -209,7 +225,6 @@ export default function HomePage() {
                     ))}
                   </select>
 
-                  {/* CÔNG VIỆC – BÊN PHẢI */}
                   <select
                     className="border rounded px-3 py-2"
                     value={job.position_id}
@@ -236,6 +251,27 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* PREVIEW FLOAT – BÊN PHẢI CON TRỎ */}
+      {hoverImage && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{
+            left: mousePos.x,
+            top: mousePos.y,
+          }}
+        >
+          <div className="bg-white p-3 rounded shadow-2xl
+                          w-[70vw] max-w-[900px]
+                          max-h-[90vh] overflow-auto">
+            <img
+              src={hoverImage}
+              alt="Preview full"
+              className="w-full h-auto"
+            />
+          </div>
+        </div>
+      )}
     </main>
   );
 }
