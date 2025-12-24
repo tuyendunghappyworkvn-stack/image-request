@@ -26,7 +26,10 @@ export async function POST(req: Request) {
 
     const file = formData.get("file") as File;
     const style = String(formData.get("style") || "").trim();
-    const jobCount = Number(formData.get("jobCount"));
+    const jobCount =
+  Number(formData.get("jobCount")) ||
+  Number(formData.get("job_count")) ||
+  Number(formData.get("job"));
 
     // ✅ FIX LỖI jobCount = 0
     if (!file || !style || Number.isNaN(jobCount)) {
