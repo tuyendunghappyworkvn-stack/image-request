@@ -22,6 +22,8 @@ export default function HomePage() {
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // 👉 CHỌN TEMPLATE
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template | null>(null);
 
@@ -161,37 +163,79 @@ export default function HomePage() {
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-            {templates.map((tpl) => (
-              <div
-                key={tpl.template_code}
-                onClick={() => {
-                  setSelectedTemplate(tpl);
-                  if (jobCount) {
-                    setJobs(
-                      Array.from({ length: jobCount }, () => ({
-                        company_name: "",
-                        position_name: "",
-                      }))
-                    );
+            {templates.map((tpl) => {
+              const isActive =
+                selectedTemplate?.template_code ===
+                tpl.template_code;
+
+              return (
+                <div
+                  key={tpl.template_code}
+                  onClick={() => {
+                    setSelectedTemplate(tpl);
+
+                    if (jobCount) {
+                      setJobs(
+                        Array.from({ length: jobCount }, () => ({
+                          company_name: "",
+                          position_name: "",
+                        }))
+                      );
+                    }
+                  }}
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(e, tpl.thumbnail)
                   }
-                }}
-                onMouseEnter={(e) =>
-                  handleMouseEnter(e, tpl.thumbnail)
-                }
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-                className="border rounded-lg cursor-pointer hover:shadow"
-              >
-                <img
-                  src={tpl.thumbnail}
-                  alt={tpl.template_code}
-                  className="w-full h-40 object-contain bg-gray-50 rounded"
-                />
-                <div className="p-2 text-center font-medium">
-                  {tpl.template_code}
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={handleMouseLeave}
+                  style={{
+                    border: isActive
+                      ? "2px solid #f97316"
+                      : "2px solid #e5e7eb",
+                    boxShadow: isActive
+                      ? "0 8px 20px rgba(249,115,22,0.25)"
+                      : "none",
+                    background: isActive ? "#fff7ed" : "#fff",
+                    borderRadius: 12,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    position: "relative",
+                  }}
+                >
+                  <img
+                    src={tpl.thumbnail}
+                    alt={tpl.template_code}
+                    className="w-full h-40 object-contain bg-gray-50 rounded"
+                  />
+
+                  <div className="p-2 text-center font-medium">
+                    {tpl.template_code}
+                  </div>
+
+                  {isActive && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        width: 26,
+                        height: 26,
+                        borderRadius: "50%",
+                        background: "#f97316",
+                        color: "#fff",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 14,
+                        fontWeight: 600,
+                      }}
+                    >
+                      ✓
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -247,9 +291,7 @@ export default function HomePage() {
                       }}
                     >
                       <option value="">
-                        {job.company_name
-                          ? "Chọn công việc"
-                          : "Chọn công việc"}
+                        Chọn công việc
                       </option>
 
                       {jobOptions.map((j) => (
