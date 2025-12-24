@@ -276,7 +276,7 @@ export default function HomePage() {
                     <option value="">
                       {job.company_id
                         ? "Chọn công việc"
-                        : "Chọn công ty trước"}
+                        : "Chọn công việc"}
                     </option>
 
                     {positions
