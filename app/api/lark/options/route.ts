@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 const LARK_BASE_ID = process.env.LARK_BASE_ID!;
 const LARK_APP_TOKEN = process.env.LARK_APP_TOKEN!;
-const TABLE_ID = "tblASMdXPDdQjAW5"; // 👈 table chứa Công ty + Công việc
+const TABLE_ID = "tblAsMdxPDDQJAWS"; // bảng chứa Công ty + Công việc
 
 export async function GET() {
   try {
@@ -17,31 +17,31 @@ export async function GET() {
     );
 
     const json = await res.json();
-    const records = json.data?.items || [];
+    const records = json?.data?.items || [];
 
-    // Lấy list { company, position }
-    const rows = records
-      .map((r: any) => ({
-        company: r.fields["Công ty"],
-        position: r.fields["Công việc"],
-      }))
-      .filter(
-        (r: any) => r.company && r.position
-      );
+    const companySet = new Set<string>();
+    const positionSet = new Set<string>();
 
-    // Unique company
-    const companies = Array.from(
-      new Set(rows.map((r: any) => r.company))
-    ).map((name) => ({
+    records.forEach((item: any) => {
+      const fields = item.fields || {};
+
+      if (fields["Công ty"]) {
+        companySet.add(fields["Công ty"]);
+      }
+
+      if (fields["Công việc"]) {
+        positionSet.add(fields["Công việc"]);
+      }
+    });
+
+    const companies = Array.from(companySet).map((name) => ({
       id: name,
       name,
     }));
 
-    // Position gắn với company
-    const positions = rows.map((r: any) => ({
-      id: `${r.company}-${r.position}`,
-      name: r.position,
-      company_id: r.company,
+    const positions = Array.from(positionSet).map((name) => ({
+      id: name,
+      name,
     }));
 
     return NextResponse.json({
@@ -49,9 +49,8 @@ export async function GET() {
       positions,
     });
   } catch (err) {
-    console.error(err);
     return NextResponse.json(
-      { error: "Failed to load options" },
+      { companies: [], positions: [] },
       { status: 500 }
     );
   }
