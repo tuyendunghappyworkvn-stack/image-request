@@ -39,14 +39,14 @@ export default function HomePage() {
   const [positions, setPositions] = useState<Option[]>([]);
 
   /* =====================
-     PREVIEW STATE (FIX DUPLICATE)
+     PREVIEW STATE (THEO CHUỘT)
   ====================== */
   const [hoverImage, setHoverImage] = useState<string | null>(null);
-  const [hoverKey, setHoverKey] = useState<string | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const hoverTimer = useRef<NodeJS.Timeout | null>(null);
 
   /* =====================
-     LOAD TEMPLATE BY JOB
+     LOAD TEMPLATE
   ====================== */
   useEffect(() => {
     if (!jobCount) return;
@@ -58,19 +58,13 @@ export default function HomePage() {
 
     fetch(`/api/templates?job_count=${jobCount}`)
       .then((res) => res.json())
-      .then((data) => {
-        setTemplates(data.data || []);
-      })
-      .catch(() => {
-        setTemplates([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .then((data) => setTemplates(data.data || []))
+      .catch(() => setTemplates([]))
+      .finally(() => setLoading(false));
   }, [jobCount]);
 
   /* =====================
-     LOAD OPTIONS FROM LARK
+     LOAD OPTIONS
   ====================== */
   useEffect(() => {
     fetch("/api/lark/options")
@@ -82,38 +76,38 @@ export default function HomePage() {
   }, []);
 
   /* =====================
-     HOVER HANDLERS (ANTI 2 IMAGE BUG)
+     HOVER HANDLERS (200ms)
   ====================== */
   function handleMouseEnter(
-    templateCode: string,
+    e: React.MouseEvent,
     thumbnail: string
   ) {
-    // clear hover cũ ngay
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current);
-      hoverTimer.current = null;
-    }
+    const { clientX, clientY } = e;
 
-    setHoverKey(templateCode);
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
 
     hoverTimer.current = setTimeout(() => {
+      setMousePos({
+        x: clientX + 20,
+        y: clientY + 20,
+      });
       setHoverImage(thumbnail);
     }, 200);
   }
 
-  function handleMouseLeave(templateCode: string) {
+  function handleMouseMove(e: React.MouseEvent) {
+    setMousePos({
+      x: e.clientX + 20,
+      y: e.clientY + 20,
+    });
+  }
+
+  function handleMouseLeave() {
     if (hoverTimer.current) {
       clearTimeout(hoverTimer.current);
       hoverTimer.current = null;
     }
-
-    setHoverKey((prev) => {
-      if (prev === templateCode) {
-        setHoverImage(null);
-        return null;
-      }
-      return prev;
-    });
+    setHoverImage(null);
   }
 
   return (
@@ -153,14 +147,6 @@ export default function HomePage() {
             2️⃣ Chọn mẫu ({templates.length} mẫu)
           </div>
 
-          {loading && <div>Đang tải mẫu...</div>}
-
-          {!loading && templates.length === 0 && jobCount && (
-            <div className="text-gray-500">
-              Chưa có mẫu cho số job này
-            </div>
-          )}
-
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
             {templates.map((tpl) => {
               const isSelected =
@@ -182,15 +168,11 @@ export default function HomePage() {
                       );
                     }
                   }}
-                  onMouseEnter={() =>
-                    handleMouseEnter(
-                      tpl.template_code,
-                      tpl.thumbnail
-                    )
+                  onMouseEnter={(e) =>
+                    handleMouseEnter(e, tpl.thumbnail)
                   }
-                  onMouseLeave={() =>
-                    handleMouseLeave(tpl.template_code)
-                  }
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={handleMouseLeave}
                   className={`border rounded-lg cursor-pointer transition
                     ${
                       isSelected
@@ -211,85 +193,26 @@ export default function HomePage() {
             })}
           </div>
         </div>
-
-        {/* STEP 3 – JOB FORM */}
-        {selectedTemplate && (
-          <div className="mt-10">
-            <h3 className="text-lg font-semibold mb-4">
-              3️⃣ Chọn thông tin công việc
-            </h3>
-
-            <div className="space-y-3">
-              {jobs.map((job, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
-                >
-                  <select
-                    className="border rounded px-3 py-2"
-                    value={job.company_id}
-                    onChange={(e) => {
-                      const c = companies.find(
-                        (c) => c.id === e.target.value
-                      );
-                      const newJobs = [...jobs];
-                      newJobs[index].company_id = c?.id || "";
-                      newJobs[index].company_name = c?.name || "";
-                      setJobs(newJobs);
-                    }}
-                  >
-                    <option value="">Chọn công ty</option>
-                    {companies.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <select
-                    className="border rounded px-3 py-2"
-                    value={job.position_id}
-                    onChange={(e) => {
-                      const p = positions.find(
-                        (p) => p.id === e.target.value
-                      );
-                      const newJobs = [...jobs];
-                      newJobs[index].position_id = p?.id || "";
-                      newJobs[index].position_name = p?.name || "";
-                      setJobs(newJobs);
-                    }}
-                  >
-                    <option value="">Chọn công việc</option>
-                    {positions.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* PREVIEW – BÊN PHẢI, GIỮA MÀN, CHỈ 1 ẢNH */}
+      {/* PREVIEW – ĐI THEO CHUỘT */}
       {hoverImage && (
         <div
           className="fixed z-50 pointer-events-none"
           style={{
-            right: "32px",
-            top: "50%",
-            transform: "translateY(-50%)",
+            left: mousePos.x,
+            top: mousePos.y,
           }}
         >
-          <div className="bg-white p-3 rounded shadow-2xl
-                          w-[70vw] max-w-[900px]
-                          max-h-[85vh] overflow-auto">
+          <div
+            className="bg-white p-2 rounded shadow-2xl
+                       w-[280px] md:w-[320px]
+                       max-h-[65vh] overflow-auto"
+          >
             <img
               src={hoverImage}
-              alt="Preview full"
-              className="w-full h-auto"
+              alt="Preview"
+              className="w-full h-auto rounded"
             />
           </div>
         </div>
