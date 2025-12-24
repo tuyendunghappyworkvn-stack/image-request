@@ -89,20 +89,33 @@ export default function HomePage() {
                 <div
                   key={tpl.template_code}
                   onClick={() => setSelectedTemplate(tpl)}
-                  className={`border rounded-lg overflow-hidden cursor-pointer transition
+                  className={`relative border rounded-lg cursor-pointer transition group
                     ${
                       isSelected
                         ? "border-orange-500 ring-2 ring-orange-300"
                         : "hover:shadow"
                     }`}
                 >
+                  {/* Ảnh thumbnail – HIỂN THỊ ĐẦY ĐỦ */}
                   <img
                     src={tpl.thumbnail}
                     alt={tpl.template_code}
-                    className="w-full h-40 object-cover"
+                    className="w-full h-40 object-contain bg-gray-50 rounded"
                   />
+
                   <div className="p-2 text-center font-medium">
                     {tpl.template_code}
+                  </div>
+
+                  {/* Hover xem ảnh FULL */}
+                  <div className="absolute left-1/2 top-0 z-50 hidden -translate-x-1/2 -translate-y-full group-hover:block">
+                    <div className="bg-white p-2 rounded shadow-xl max-w-[480px] max-h-[80vh] overflow-auto">
+                      <img
+                        src={tpl.thumbnail}
+                        alt="Preview full"
+                        className="w-full h-auto"
+                      />
+                    </div>
                   </div>
                 </div>
               );
