@@ -12,30 +12,24 @@ export default function HomePage() {
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<Template | null>(null);
 
-  // Gọi API n8n khi chọn jobCount
   useEffect(() => {
     if (!jobCount) return;
 
     setLoading(true);
+    setTemplates([]);
+    setSelectedTemplate(null);
 
-    useEffect(() => {
-  if (!jobCount) return;
-
-  setLoading(true);
-
-  fetch(`/api/templates?job_count=${jobCount}`)
-    .then((res) => res.json())
-    .then((data) => {
-      setTemplates(data.data || []);
-    })
-    .catch(() => {
-      setTemplates([]);
-    })
-    .finally(() => {
-      setLoading(false);
-    });
-}, [jobCount]);
+    fetch(`/api/templates?job_count=${jobCount}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setTemplates(data.data || []);
+      })
+      .catch(() => {
+        setTemplates([]);
+      })
       .finally(() => {
         setLoading(false);
       });
@@ -59,7 +53,7 @@ export default function HomePage() {
               <button
                 key={n}
                 onClick={() => setJobCount(n)}
-                className={`px-4 py-2 rounded border font-medium
+                className={`px-4 py-2 rounded border font-medium transition
                   ${
                     jobCount === n
                       ? "bg-orange-500 text-white border-orange-500"
@@ -87,22 +81,41 @@ export default function HomePage() {
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-            {templates.map((tpl) => (
-              <div
-                key={tpl.template_code}
-                className="border rounded-lg overflow-hidden hover:shadow cursor-pointer"
-              >
-                <img
-                  src={tpl.thumbnail}
-                  alt={tpl.template_code}
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-2 text-center font-medium">
-                  {tpl.template_code}
+            {templates.map((tpl) => {
+              const isSelected =
+                selectedTemplate?.template_code === tpl.template_code;
+
+              return (
+                <div
+                  key={tpl.template_code}
+                  onClick={() => setSelectedTemplate(tpl)}
+                  className={`border rounded-lg overflow-hidden cursor-pointer transition
+                    ${
+                      isSelected
+                        ? "border-orange-500 ring-2 ring-orange-300"
+                        : "hover:shadow"
+                    }`}
+                >
+                  <img
+                    src={tpl.thumbnail}
+                    alt={tpl.template_code}
+                    className="w-full h-40 object-cover"
+                  />
+                  <div className="p-2 text-center font-medium">
+                    {tpl.template_code}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {selectedTemplate && (
+            <div className="mt-6 text-right">
+              <button className="bg-orange-500 text-white px-6 py-2 rounded font-semibold hover:bg-orange-600">
+                Tiếp tục
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </main>
