@@ -8,10 +8,9 @@ type Template = {
   thumbnail: string;
 };
 
-type Option = {
+type CompanyOption = {
   id: string;
   name: string;
-  company_id?: string; // dùng cho position
 };
 
 type JobInput = {
@@ -35,12 +34,14 @@ export default function HomePage() {
 
   /* =====================
      OPTIONS FROM LARK
+     companies: [{id,name}]
+     positions: { "Company A": ["Job 1","Job 2"] }
   ====================== */
-  const [companies, setCompanies] = useState<Option[]>([]);
-  const [positions, setPositions] = useState<Option[]>([]);
+  const [companies, setCompanies] = useState<CompanyOption[]>([]);
+  const [positions, setPositions] = useState<Record<string, string[]>>({});
 
   /* =====================
-     PREVIEW STATE (FOLLOW CURSOR)
+     PREVIEW STATE
   ====================== */
   const [hoverImage, setHoverImage] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -78,20 +79,18 @@ export default function HomePage() {
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data.companies || []);
-        setPositions(data.positions || []);
+        setPositions(data.positions || {});
       });
   }, []);
 
   /* =====================
-     HOVER HANDLERS (200ms)
+     HOVER HANDLERS
   ====================== */
   function handleMouseEnter(
     e: React.MouseEvent,
     thumbnail: string
   ) {
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current);
-    }
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
 
     const { clientX, clientY } = e;
 
@@ -211,7 +210,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 3 – JOB FORM (ĐÃ SỬA CHUẨN) */}
+        {/* STEP 3 – FILTER JOB THEO CÔNG TY */}
         {selectedTemplate && (
           <div className="mt-10">
             <h3 className="text-lg font-semibold mb-4">
@@ -219,85 +218,78 @@ export default function HomePage() {
             </h3>
 
             <div className="space-y-3">
-              {jobs.map((job, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
-                >
-                  {/* SELECT CÔNG TY */}
-                  <select
-                    className="border rounded px-3 py-2"
-                    value={job.company_id}
-                    onChange={(e) => {
-                      const companyId = e.target.value;
-                      const company = companies.find(
-                        (c) => c.id === companyId
-                      );
+              {jobs.map((job, index) => {
+                const jobOptions =
+                  positions[job.company_name] || [];
 
-                      const newJobs = [...jobs];
-                      newJobs[index] = {
-                        ...newJobs[index],
-                        company_id: companyId,
-                        company_name: company?.name || "",
-                        position_id: "",
-                        position_name: "",
-                      };
-                      setJobs(newJobs);
-                    }}
+                return (
+                  <div
+                    key={index}
+                    className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
                   >
-                    <option value="">Chọn công ty</option>
-                    {companies.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    {/* CÔNG TY */}
+                    <select
+                      className="border rounded px-3 py-2"
+                      value={job.company_name}
+                      onChange={(e) => {
+                        const companyName = e.target.value;
 
-                  {/* SELECT CÔNG VIỆC */}
-                  <select
-                    className="border rounded px-3 py-2"
-                    value={job.position_id}
-                    disabled={!job.company_id}
-                    onChange={(e) => {
-                      const positionId = e.target.value;
-                      const position = positions.find(
-                        (p) => p.id === positionId
-                      );
-
-                      const newJobs = [...jobs];
-                      newJobs[index] = {
-                        ...newJobs[index],
-                        position_id: positionId,
-                        position_name: position?.name || "",
-                      };
-                      setJobs(newJobs);
-                    }}
-                  >
-                    <option value="">
-                      {job.company_id
-                        ? "Chọn công việc"
-                        : "Chọn công việc"}
-                    </option>
-
-                    {positions
-                      .filter(
-                        (p) =>
-                          p.company_id === job.company_id
-                      )
-                      .map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
+                        const newJobs = [...jobs];
+                        newJobs[index] = {
+                          company_id: companyName,
+                          company_name: companyName,
+                          position_id: "",
+                          position_name: "",
+                        };
+                        setJobs(newJobs);
+                      }}
+                    >
+                      <option value="">Chọn công ty</option>
+                      {companies.map((c) => (
+                        <option key={c.id} value={c.name}>
+                          {c.name}
                         </option>
                       ))}
-                  </select>
-                </div>
-              ))}
+                    </select>
+
+                    {/* CÔNG VIỆC */}
+                    <select
+                      className="border rounded px-3 py-2"
+                      value={job.position_name}
+                      disabled={!job.company_name}
+                      onChange={(e) => {
+                        const positionName = e.target.value;
+
+                        const newJobs = [...jobs];
+                        newJobs[index] = {
+                          ...newJobs[index],
+                          position_id: positionName,
+                          position_name: positionName,
+                        };
+                        setJobs(newJobs);
+                      }}
+                    >
+                      <option value="">
+                        {job.company_name
+                          ? "Chọn công việc"
+                          : "Chọn công việc"}
+                      </option>
+
+                      {jobOptions.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
 
-      {/* PREVIEW – THEO CHUỘT */}
+      {/* PREVIEW */}
       {hoverImage && (
         <div
           className="fixed z-50 pointer-events-none"
@@ -306,14 +298,10 @@ export default function HomePage() {
             top: mousePos.y - 150,
           }}
         >
-          <div
-            className="bg-white p-3 rounded shadow-2xl
-                       w-[420px] md:w-[480px]
-                       max-h-[70vh] overflow-auto"
-          >
+          <div className="bg-white p-3 rounded shadow-2xl w-[420px] max-h-[70vh] overflow-auto">
             <img
               src={hoverImage}
-              alt="Preview full"
+              alt="Preview"
               className="w-full h-auto rounded"
             />
           </div>
