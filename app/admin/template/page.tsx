@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function AdminTemplatePage() {
   const [file, setFile] = useState<File | null>(null);
@@ -8,6 +8,21 @@ export default function AdminTemplatePage() {
   const [style, setStyle] = useState("");
   const [jobCount, setJobCount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
+
+  // 🔑 ref để reset input file
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  function resetForm() {
+    setFile(null);
+    setPreview(null);
+    setStyle("");
+    setJobCount(0);
+
+    // reset input file DOM
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +50,11 @@ export default function AdminTemplatePage() {
     console.log(data);
 
     setLoading(false);
+
     alert("Upload xong, mở DevTools > Network để xem response");
+
+    // ✅ RESET FORM SAU KHI BẤM OK
+    resetForm();
   }
 
   return (
@@ -54,6 +73,7 @@ export default function AdminTemplatePage() {
                 type="file"
                 accept="image/*"
                 id="upload"
+                ref={fileInputRef}
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
