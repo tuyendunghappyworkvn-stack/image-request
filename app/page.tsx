@@ -8,6 +8,18 @@ type Template = {
   thumbnail: string;
 };
 
+type Option = {
+  id: string;
+  name: string;
+};
+
+type JobInput = {
+  company_id: string;
+  company_name: string;
+  position_id: string;
+  position_name: string;
+};
+
 export default function HomePage() {
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -15,12 +27,23 @@ export default function HomePage() {
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template | null>(null);
 
+  // job input
+  const [jobs, setJobs] = useState<JobInput[]>([]);
+
+  // options từ Lark
+  const [companies, setCompanies] = useState<Option[]>([]);
+  const [positions, setPositions] = useState<Option[]>([]);
+
+  /* =====================
+     LOAD TEMPLATE THEO JOB
+  ====================== */
   useEffect(() => {
     if (!jobCount) return;
 
     setLoading(true);
     setTemplates([]);
     setSelectedTemplate(null);
+    setJobs([]);
 
     fetch(`/api/templates?job_count=${jobCount}`)
       .then((res) => res.json())
@@ -34,6 +57,18 @@ export default function HomePage() {
         setLoading(false);
       });
   }, [jobCount]);
+
+  /* =====================
+     LOAD OPTION TỪ LARK
+  ====================== */
+  useEffect(() => {
+    fetch("/api/lark/options")
+      .then((res) => res.json())
+      .then((data) => {
+        setCompanies(data.companies || []);
+        setPositions(data.positions || []);
+      });
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#FFF6ED] p-8">
@@ -88,7 +123,20 @@ export default function HomePage() {
               return (
                 <div
                   key={tpl.template_code}
-                  onClick={() => setSelectedTemplate(tpl)}
+                  onClick={() => {
+                    setSelectedTemplate(tpl);
+
+                    if (jobCount) {
+                      setJobs(
+                        Array.from({ length: jobCount }, () => ({
+                          company_id: "",
+                          company_name: "",
+                          position_id: "",
+                          position_name: "",
+                        }))
+                      );
+                    }
+                  }}
                   className={`relative border rounded-lg cursor-pointer transition group
                     ${
                       isSelected
@@ -96,7 +144,6 @@ export default function HomePage() {
                         : "hover:shadow"
                     }`}
                 >
-                  {/* Thumbnail: hiển thị FULL, không cắt */}
                   <img
                     src={tpl.thumbnail}
                     alt={tpl.template_code}
@@ -107,17 +154,13 @@ export default function HomePage() {
                     {tpl.template_code}
                   </div>
 
-                  {/* HOVER: xem ảnh FULL TO */}
-                  <div
-                    className="absolute left-1/2 top-0 z-50 hidden 
-                               -translate-x-1/2 -translate-y-full 
-                               group-hover:block"
-                  >
-                    <div
-                      className="bg-white p-3 rounded shadow-2xl
-                                 w-[80vw] max-w-[900px]
-                                 max-h-[90vh] overflow-auto"
-                    >
+                  {/* Hover ảnh full */}
+                  <div className="absolute left-1/2 top-0 z-50 hidden 
+                                  -translate-x-1/2 -translate-y-full 
+                                  group-hover:block">
+                    <div className="bg-white p-3 rounded shadow-2xl
+                                    w-[80vw] max-w-[900px]
+                                    max-h-[90vh] overflow-auto">
                       <img
                         src={tpl.thumbnail}
                         alt="Preview full"
@@ -129,15 +172,69 @@ export default function HomePage() {
               );
             })}
           </div>
-
-          {selectedTemplate && (
-            <div className="mt-6 text-right">
-              <button className="bg-orange-500 text-white px-6 py-2 rounded font-semibold hover:bg-orange-600">
-                Tiếp tục
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* STEP 3 – FORM NHẬP JOB */}
+        {selectedTemplate && (
+          <div className="mt-10">
+            <h3 className="text-lg font-semibold mb-4">
+              3️⃣ Chọn thông tin công việc
+            </h3>
+
+            <div className="space-y-3">
+              {jobs.map((job, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
+                >
+                  {/* CÔNG TY – BÊN TRÁI */}
+                  <select
+                    className="border rounded px-3 py-2"
+                    value={job.company_id}
+                    onChange={(e) => {
+                      const c = companies.find(
+                        (c) => c.id === e.target.value
+                      );
+                      const newJobs = [...jobs];
+                      newJobs[index].company_id = c?.id || "";
+                      newJobs[index].company_name = c?.name || "";
+                      setJobs(newJobs);
+                    }}
+                  >
+                    <option value="">Chọn công ty</option>
+                    {companies.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* CÔNG VIỆC – BÊN PHẢI */}
+                  <select
+                    className="border rounded px-3 py-2"
+                    value={job.position_id}
+                    onChange={(e) => {
+                      const p = positions.find(
+                        (p) => p.id === e.target.value
+                      );
+                      const newJobs = [...jobs];
+                      newJobs[index].position_id = p?.id || "";
+                      newJobs[index].position_name = p?.name || "";
+                      setJobs(newJobs);
+                    }}
+                  >
+                    <option value="">Chọn công việc</option>
+                    {positions.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );
