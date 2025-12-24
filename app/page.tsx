@@ -39,9 +39,10 @@ export default function HomePage() {
   const [positions, setPositions] = useState<Option[]>([]);
 
   /* =====================
-     PREVIEW STATE
+     PREVIEW STATE (FIX DUPLICATE)
   ====================== */
   const [hoverImage, setHoverImage] = useState<string | null>(null);
+  const [hoverKey, setHoverKey] = useState<string | null>(null);
   const hoverTimer = useRef<NodeJS.Timeout | null>(null);
 
   /* =====================
@@ -81,20 +82,38 @@ export default function HomePage() {
   }, []);
 
   /* =====================
-     HOVER HANDLERS (DELAY 200ms)
+     HOVER HANDLERS (ANTI 2 IMAGE BUG)
   ====================== */
-  function handleMouseEnter(thumbnail: string) {
+  function handleMouseEnter(
+    templateCode: string,
+    thumbnail: string
+  ) {
+    // clear hover cũ ngay
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current);
+      hoverTimer.current = null;
+    }
+
+    setHoverKey(templateCode);
+
     hoverTimer.current = setTimeout(() => {
       setHoverImage(thumbnail);
     }, 200);
   }
 
-  function handleMouseLeave() {
+  function handleMouseLeave(templateCode: string) {
     if (hoverTimer.current) {
       clearTimeout(hoverTimer.current);
       hoverTimer.current = null;
     }
-    setHoverImage(null);
+
+    setHoverKey((prev) => {
+      if (prev === templateCode) {
+        setHoverImage(null);
+        return null;
+      }
+      return prev;
+    });
   }
 
   return (
@@ -163,8 +182,15 @@ export default function HomePage() {
                       );
                     }
                   }}
-                  onMouseEnter={() => handleMouseEnter(tpl.thumbnail)}
-                  onMouseLeave={handleMouseLeave}
+                  onMouseEnter={() =>
+                    handleMouseEnter(
+                      tpl.template_code,
+                      tpl.thumbnail
+                    )
+                  }
+                  onMouseLeave={() =>
+                    handleMouseLeave(tpl.template_code)
+                  }
                   className={`border rounded-lg cursor-pointer transition
                     ${
                       isSelected
@@ -199,7 +225,6 @@ export default function HomePage() {
                   key={index}
                   className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
                 >
-                  {/* COMPANY */}
                   <select
                     className="border rounded px-3 py-2"
                     value={job.company_id}
@@ -221,7 +246,6 @@ export default function HomePage() {
                     ))}
                   </select>
 
-                  {/* POSITION */}
                   <select
                     className="border rounded px-3 py-2"
                     value={job.position_id}
@@ -249,7 +273,7 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* PREVIEW – BÊN PHẢI GIỮA MÀN */}
+      {/* PREVIEW – BÊN PHẢI, GIỮA MÀN, CHỈ 1 ẢNH */}
       {hoverImage && (
         <div
           className="fixed z-50 pointer-events-none"
