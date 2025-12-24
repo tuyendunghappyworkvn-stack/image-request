@@ -18,6 +18,11 @@ type JobInput = {
   position_name: string;
 };
 
+type ContactHistory = {
+  email: string;
+  zalo: string;
+};
+
 export default function HomePage() {
   const [jobCount, setJobCount] = useState<number | null>(null);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -89,6 +94,20 @@ export default function HomePage() {
   }, []);
 
   /* =====================
+     LOAD CONTACT HISTORY
+  ====================== */
+  useEffect(() => {
+    const history: ContactHistory[] = JSON.parse(
+      localStorage.getItem("contact_history") || "[]"
+    );
+
+    if (history.length > 0) {
+      setEmail(history[0].email || "");
+      setZalo(history[0].zalo || "");
+    }
+  }, []);
+
+  /* =====================
      HOVER HANDLERS
   ====================== */
   function handleMouseEnter(
@@ -151,18 +170,34 @@ export default function HomePage() {
     };
 
     try {
-      const res = await fetch(
-        "https://n8n.happywork.com.vn/webhook-test/tao-list-job",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch("/api/submit-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!res.ok) throw new Error("Webhook error");
+
+      /* ===== SAVE CONTACT HISTORY ===== */
+      const history: ContactHistory[] = JSON.parse(
+        localStorage.getItem("contact_history") || "[]"
+      );
+
+      const newItem = { email, zalo };
+
+      const updated = [
+        newItem,
+        ...history.filter(
+          (h) => h.email !== email || h.zalo !== zalo
+        ),
+      ].slice(0, 5);
+
+      localStorage.setItem(
+        "contact_history",
+        JSON.stringify(updated)
+      );
 
       alert("✅ Đã gửi yêu cầu tạo ảnh, hệ thống đang xử lý!");
     } catch (err) {
@@ -376,7 +411,6 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* SUBMIT */}
               <div className="mt-8 text-center">
                 <button
                   onClick={handleSubmit}
