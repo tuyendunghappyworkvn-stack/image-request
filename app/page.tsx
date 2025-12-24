@@ -303,7 +303,7 @@ export default function HomePage() {
           className="fixed z-50 pointer-events-none"
           style={{
             left: mousePos.x,
-            top: mousePos.y - 120,
+            top: mousePos.y - 150,
           }}
         >
           <div
