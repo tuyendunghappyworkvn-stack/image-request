@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 
 type Template = {
-  id: string;
   template_code: string;
-  job_count: number;
+  style: string;
   thumbnail: string;
 };
 
@@ -20,16 +19,23 @@ export default function HomePage() {
 
     setLoading(true);
 
-    fetch(
-      `https://n8n.happywork.com.vn/webhook/get-templates?job_count=${jobCount}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        setTemplates(data.templates || []);
-      })
-      .catch(() => {
-        setTemplates([]);
-      })
+    useEffect(() => {
+  if (!jobCount) return;
+
+  setLoading(true);
+
+  fetch(`/api/templates?job_count=${jobCount}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setTemplates(data.data || []);
+    })
+    .catch(() => {
+      setTemplates([]);
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+}, [jobCount]);
       .finally(() => {
         setLoading(false);
       });
@@ -83,7 +89,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
             {templates.map((tpl) => (
               <div
-                key={tpl.id}
+                key={tpl.template_code}
                 className="border rounded-lg overflow-hidden hover:shadow cursor-pointer"
               >
                 <img
