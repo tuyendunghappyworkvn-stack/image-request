@@ -6,7 +6,7 @@ const TABLE_ID = "tblASMdXPDdQjAW5";
 /* =========================
    GET TENANT ACCESS TOKEN
 ========================= */
-async function getTenantToken() {
+async function getTenantToken(): Promise<string> {
   const res = await fetch(
     "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
     {
@@ -32,13 +32,13 @@ async function getTenantToken() {
 /* =========================
    FETCH ALL RECORDS (PAGINATION)
 ========================= */
-async function fetchAllRecords(token: string) {
+async function fetchAllRecords(token: string): Promise<any[]> {
   let allRecords: any[] = [];
   let pageToken: string | undefined = undefined;
-  let hasMore = true;
+  let hasMore: boolean = true;
 
   while (hasMore) {
-    const url =
+    const url: string =
       `https://open.larksuite.com/open-apis/bitable/v1/apps/${BASE_ID}/tables/${TABLE_ID}/records?page_size=500` +
       (pageToken ? `&page_token=${pageToken}` : "");
 
@@ -96,7 +96,7 @@ export async function GET() {
     });
 
     const companies = Array.from(companySet).map((name) => ({
-      id: name, // dùng company name làm id (đúng DB hiện tại)
+      id: name, // dùng name làm id
       name,
     }));
 
