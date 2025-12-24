@@ -14,9 +14,7 @@ type CompanyOption = {
 };
 
 type JobInput = {
-  company_id: string;
   company_name: string;
-  position_id: string;
   position_name: string;
 };
 
@@ -34,11 +32,10 @@ export default function HomePage() {
 
   /* =====================
      OPTIONS FROM LARK
-     companies: [{id,name}]
-     positions: { "Company A": ["Job 1","Job 2"] }
   ====================== */
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
-  const [positions, setPositions] = useState<Record<string, string[]>>({});
+  const [jobsByCompany, setJobsByCompany] =
+    useState<Record<string, string[]>>({});
 
   /* =====================
      PREVIEW STATE
@@ -79,7 +76,7 @@ export default function HomePage() {
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data.companies || []);
-        setPositions(data.positions || {});
+        setJobsByCompany(data.jobsByCompany || {});
       });
   }, []);
 
@@ -164,53 +161,41 @@ export default function HomePage() {
           )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-            {templates.map((tpl) => {
-              const isSelected =
-                selectedTemplate?.template_code === tpl.template_code;
-
-              return (
-                <div
-                  key={tpl.template_code}
-                  onClick={() => {
-                    setSelectedTemplate(tpl);
-                    if (jobCount) {
-                      setJobs(
-                        Array.from({ length: jobCount }, () => ({
-                          company_id: "",
-                          company_name: "",
-                          position_id: "",
-                          position_name: "",
-                        }))
-                      );
-                    }
-                  }}
-                  onMouseEnter={(e) =>
-                    handleMouseEnter(e, tpl.thumbnail)
+            {templates.map((tpl) => (
+              <div
+                key={tpl.template_code}
+                onClick={() => {
+                  setSelectedTemplate(tpl);
+                  if (jobCount) {
+                    setJobs(
+                      Array.from({ length: jobCount }, () => ({
+                        company_name: "",
+                        position_name: "",
+                      }))
+                    );
                   }
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
-                  className={`border rounded-lg cursor-pointer transition
-                    ${
-                      isSelected
-                        ? "border-orange-500 ring-2 ring-orange-300"
-                        : "hover:shadow"
-                    }`}
-                >
-                  <img
-                    src={tpl.thumbnail}
-                    alt={tpl.template_code}
-                    className="w-full h-40 object-contain bg-gray-50 rounded"
-                  />
-                  <div className="p-2 text-center font-medium">
-                    {tpl.template_code}
-                  </div>
+                }}
+                onMouseEnter={(e) =>
+                  handleMouseEnter(e, tpl.thumbnail)
+                }
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
+                className="border rounded-lg cursor-pointer hover:shadow"
+              >
+                <img
+                  src={tpl.thumbnail}
+                  alt={tpl.template_code}
+                  className="w-full h-40 object-contain bg-gray-50 rounded"
+                />
+                <div className="p-2 text-center font-medium">
+                  {tpl.template_code}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* STEP 3 – FILTER JOB THEO CÔNG TY */}
+        {/* STEP 3 */}
         {selectedTemplate && (
           <div className="mt-10">
             <h3 className="text-lg font-semibold mb-4">
@@ -220,25 +205,22 @@ export default function HomePage() {
             <div className="space-y-3">
               {jobs.map((job, index) => {
                 const jobOptions =
-                  positions[job.company_name] || [];
+                  jobsByCompany[job.company_name] || [];
 
                 return (
                   <div
                     key={index}
                     className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
                   >
-                    {/* CÔNG TY */}
+                    {/* COMPANY */}
                     <select
                       className="border rounded px-3 py-2"
                       value={job.company_name}
                       onChange={(e) => {
                         const companyName = e.target.value;
-
                         const newJobs = [...jobs];
                         newJobs[index] = {
-                          company_id: companyName,
                           company_name: companyName,
-                          position_id: "",
                           position_name: "",
                         };
                         setJobs(newJobs);
@@ -252,20 +234,15 @@ export default function HomePage() {
                       ))}
                     </select>
 
-                    {/* CÔNG VIỆC */}
+                    {/* JOB */}
                     <select
                       className="border rounded px-3 py-2"
                       value={job.position_name}
                       disabled={!job.company_name}
                       onChange={(e) => {
-                        const positionName = e.target.value;
-
                         const newJobs = [...jobs];
-                        newJobs[index] = {
-                          ...newJobs[index],
-                          position_id: positionName,
-                          position_name: positionName,
-                        };
+                        newJobs[index].position_name =
+                          e.target.value;
                         setJobs(newJobs);
                       }}
                     >
@@ -275,9 +252,9 @@ export default function HomePage() {
                           : "Chọn công việc"}
                       </option>
 
-                      {jobOptions.map((name) => (
-                        <option key={name} value={name}>
-                          {name}
+                      {jobOptions.map((j) => (
+                        <option key={j} value={j}>
+                          {j}
                         </option>
                       ))}
                     </select>
