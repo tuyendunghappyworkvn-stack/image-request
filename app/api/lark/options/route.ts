@@ -4,7 +4,7 @@ const BASE_ID = "GfsDbDUd5aRCNSsRzmKlURVagQg";
 const TABLE_ID = "tblASMdXPDdQjAW5";
 
 /* =========================
-   LẤY TENANT ACCESS TOKEN
+   GET TENANT ACCESS TOKEN
 ========================= */
 async function getTenantToken() {
   const res = await fetch(
@@ -24,17 +24,16 @@ async function getTenantToken() {
   const data = await res.json();
 
   if (!data.tenant_access_token) {
-    console.error("❌ Lỗi lấy tenant token:", data);
+    console.error("❌ Cannot get tenant token:", data);
     throw new Error("Cannot get tenant access token");
   }
 
   console.log("✅ TENANT TOKEN OK");
-
   return data.tenant_access_token;
 }
 
 /* =========================
-   GET OPTIONS
+   GET COMPANY + JOB OPTIONS
 ========================= */
 export async function GET() {
   try {
@@ -52,39 +51,50 @@ export async function GET() {
 
     const json = await res.json();
 
-    console.log("📦 LARK RESPONSE =", JSON.stringify(json));
+    console.log(
+      "📦 LARK RESPONSE =",
+      JSON.stringify(json?.data?.items?.length)
+    );
 
     const records = json?.data?.items || [];
 
+    // =========================
+    // BUILD DATA
+    // =========================
     const companySet = new Set<string>();
-    const positionSet = new Set<string>();
+    const jobsByCompany: Record<string, string[]> = {};
 
     records.forEach((item: any) => {
       const fields = item.fields || {};
+      const company = fields["Công ty"];
+      const job = fields["Công việc"];
 
-      if (fields["Công ty"]) {
-        companySet.add(fields["Công ty"]);
+      if (!company || !job) return;
+
+      companySet.add(company);
+
+      if (!jobsByCompany[company]) {
+        jobsByCompany[company] = [];
       }
 
-      if (fields["Công việc"]) {
-        positionSet.add(fields["Công việc"]);
+      if (!jobsByCompany[company].includes(job)) {
+        jobsByCompany[company].push(job);
       }
     });
+
+    const companies = Array.from(companySet).map((name) => ({
+      id: name,
+      name,
+    }));
 
     return NextResponse.json({
-      companies: Array.from(companySet).map((name) => ({
-        id: name,
-        name,
-      })),
-      positions: Array.from(positionSet).map((name) => ({
-        id: name,
-        name,
-      })),
+      companies,
+      jobsByCompany,
     });
   } catch (err) {
-    console.error("❌ API ERROR", err);
+    console.error("❌ API ERROR:", err);
     return NextResponse.json(
-      { companies: [], positions: [] },
+      { companies: [], jobsByCompany: {} },
       { status: 500 }
     );
   }
