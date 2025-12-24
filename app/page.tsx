@@ -123,6 +123,54 @@ export default function HomePage() {
     setHoverImage(null);
   }
 
+  /* =====================
+     SUBMIT TO N8N
+  ====================== */
+  async function handleSubmit() {
+    if (!jobCount || !selectedTemplate) {
+      alert("Vui lòng chọn số job và mẫu ảnh");
+      return;
+    }
+
+    if (!email || !zalo) {
+      alert("Vui lòng nhập email và số Zalo");
+      return;
+    }
+
+    const payload = {
+      job_count: jobCount,
+      template_code: selectedTemplate.template_code,
+      jobs: jobs.map((j) => ({
+        company: j.company_name,
+        position: j.position_name,
+      })),
+      contact: {
+        email,
+        zalo,
+      },
+    };
+
+    try {
+      const res = await fetch(
+        "https://n8n.happywork.com.vn/webhook-test/tao-list-job",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) throw new Error("Webhook error");
+
+      alert("✅ Đã gửi yêu cầu tạo ảnh, hệ thống đang xử lý!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Gửi dữ liệu thất bại, vui lòng thử lại");
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#FFF6ED] p-8">
       <div className="max-w-5xl mx-auto bg-white rounded-xl p-8 shadow">
@@ -245,10 +293,9 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 3 + STEP 4 */}
+        {/* STEP 3 + 4 + SUBMIT */}
         {selectedTemplate && (
           <div className="mt-10">
-            {/* STEP 3 */}
             <h3 className="text-lg font-semibold mb-4">
               3️⃣ Chọn thông tin công việc
             </h3>
@@ -267,10 +314,9 @@ export default function HomePage() {
                       className="border rounded px-3 py-2"
                       value={job.company_name}
                       onChange={(e) => {
-                        const companyName = e.target.value;
                         const newJobs = [...jobs];
                         newJobs[index] = {
-                          company_name: companyName,
+                          company_name: e.target.value,
                           position_name: "",
                         };
                         setJobs(newJobs);
@@ -307,7 +353,6 @@ export default function HomePage() {
               })}
             </div>
 
-            {/* STEP 4 */}
             <div className="mt-10">
               <h3 className="text-lg font-semibold mb-4">
                 4️⃣ Thông tin liên hệ
@@ -329,6 +374,16 @@ export default function HomePage() {
                   onChange={(e) => setZalo(e.target.value)}
                   className="border rounded px-3 py-2"
                 />
+              </div>
+
+              {/* SUBMIT */}
+              <div className="mt-8 text-center">
+                <button
+                  onClick={handleSubmit}
+                  className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
+                >
+                  Tạo ảnh
+                </button>
               </div>
             </div>
           </div>
