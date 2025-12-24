@@ -27,10 +27,14 @@ export default function HomePage() {
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template | null>(null);
 
-  // job input
+  /* =====================
+     JOB INPUT
+  ====================== */
   const [jobs, setJobs] = useState<JobInput[]>([]);
 
-  // options từ Lark
+  /* =====================
+     OPTIONS FROM LARK
+  ====================== */
   const [companies, setCompanies] = useState<Option[]>([]);
   const [positions, setPositions] = useState<Option[]>([]);
 
@@ -38,11 +42,10 @@ export default function HomePage() {
      PREVIEW STATE
   ====================== */
   const [hoverImage, setHoverImage] = useState<string | null>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const hoverTimer = useRef<NodeJS.Timeout | null>(null);
 
   /* =====================
-     LOAD TEMPLATE THEO JOB
+     LOAD TEMPLATE BY JOB
   ====================== */
   useEffect(() => {
     if (!jobCount) return;
@@ -66,7 +69,7 @@ export default function HomePage() {
   }, [jobCount]);
 
   /* =====================
-     LOAD OPTION TỪ LARK
+     LOAD OPTIONS FROM LARK
   ====================== */
   useEffect(() => {
     fetch("/api/lark/options")
@@ -78,16 +81,10 @@ export default function HomePage() {
   }, []);
 
   /* =====================
-     HOVER HANDLERS
+     HOVER HANDLERS (DELAY 200ms)
   ====================== */
-  function handleMouseEnter(
-    e: React.MouseEvent,
-    thumbnail: string
-  ) {
-    const { clientX, clientY } = e;
-
+  function handleMouseEnter(thumbnail: string) {
     hoverTimer.current = setTimeout(() => {
-      setMousePos({ x: clientX + 20, y: clientY + 20 });
       setHoverImage(thumbnail);
     }, 200);
   }
@@ -166,9 +163,7 @@ export default function HomePage() {
                       );
                     }
                   }}
-                  onMouseEnter={(e) =>
-                    handleMouseEnter(e, tpl.thumbnail)
-                  }
+                  onMouseEnter={() => handleMouseEnter(tpl.thumbnail)}
                   onMouseLeave={handleMouseLeave}
                   className={`border rounded-lg cursor-pointer transition
                     ${
@@ -191,7 +186,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 3 – FORM NHẬP JOB */}
+        {/* STEP 3 – JOB FORM */}
         {selectedTemplate && (
           <div className="mt-10">
             <h3 className="text-lg font-semibold mb-4">
@@ -204,6 +199,7 @@ export default function HomePage() {
                   key={index}
                   className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
                 >
+                  {/* COMPANY */}
                   <select
                     className="border rounded px-3 py-2"
                     value={job.company_id}
@@ -225,6 +221,7 @@ export default function HomePage() {
                     ))}
                   </select>
 
+                  {/* POSITION */}
                   <select
                     className="border rounded px-3 py-2"
                     value={job.position_id}
@@ -252,18 +249,19 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* PREVIEW FLOAT – BÊN PHẢI CON TRỎ */}
+      {/* PREVIEW – BÊN PHẢI GIỮA MÀN */}
       {hoverImage && (
         <div
           className="fixed z-50 pointer-events-none"
           style={{
-            left: mousePos.x,
-            top: mousePos.y,
+            right: "32px",
+            top: "50%",
+            transform: "translateY(-50%)",
           }}
         >
           <div className="bg-white p-3 rounded shadow-2xl
                           w-[70vw] max-w-[900px]
-                          max-h-[90vh] overflow-auto">
+                          max-h-[85vh] overflow-auto">
             <img
               src={hoverImage}
               alt="Preview full"
