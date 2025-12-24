@@ -277,13 +277,13 @@ export default function HomePage() {
           className="fixed z-50 pointer-events-none"
           style={{
             left: mousePos.x,
-            top: mousePos.y,
+            top: mousePos.y - 120,
           }}
         >
           <div
             className="bg-white p-3 rounded shadow-2xl
-                       w-[840px] md:w-[960px]
-                       max-h-[85vh] overflow-auto"
+                       w-[420px] md:w-[480px]
+                       max-h-[70vh] overflow-auto"
           >
             <img
               src={hoverImage}
