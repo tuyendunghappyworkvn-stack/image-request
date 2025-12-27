@@ -405,7 +405,7 @@ export default function HomePage() {
 
           <div className="flex justify-center">
             <img
-              src={resultImage.preview_url}
+              src={resultImage.view_url.replace("/view", "") + "?export=download"}
               alt="Generated preview"
               className="max-w-full rounded-lg shadow-lg"
             />
@@ -414,6 +414,8 @@ export default function HomePage() {
           <div className="flex justify-center mt-6">
             <a
               href={resultImage.download_url}
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
             >
               ⬇️ Tải ảnh
