@@ -71,18 +71,27 @@ export async function GET() {
     // ✅ LẤY TOÀN BỘ RECORDS
     const records = await fetchAllRecords(token);
 
-    // =========================
-    // BUILD DATA
-    // =========================
+    /**
+     * OUTPUT STRUCTURE
+     * companies: string[]
+     * jobsByCompany: {
+     *   [company]: [{ position, code }]
+     * }
+     */
     const companySet = new Set<string>();
-    const jobsByCompany: Record<string, string[]> = {};
+    const jobsByCompany: Record<
+      string,
+      { position: string; code: string }[]
+    > = {};
 
     records.forEach((item: any) => {
       const fields = item.fields || {};
-      const company = fields["Công ty"];
-      const job = fields["Công việc"];
 
-      if (!company || !job) return;
+      const code = fields["Mã"];        // 👈 CỘT MÃ (JOB.xxxx)
+      const company = fields["Công ty"];
+      const position = fields["Công việc"];
+
+      if (!code || !company || !position) return;
 
       companySet.add(company);
 
@@ -90,13 +99,21 @@ export async function GET() {
         jobsByCompany[company] = [];
       }
 
-      if (!jobsByCompany[company].includes(job)) {
-        jobsByCompany[company].push(job);
+      // ❌ tránh trùng position + code
+      const existed = jobsByCompany[company].some(
+        (j) => j.code === code
+      );
+
+      if (!existed) {
+        jobsByCompany[company].push({
+          position,
+          code,
+        });
       }
     });
 
     const companies = Array.from(companySet).map((name) => ({
-      id: name, // dùng name làm id
+      id: name, // dùng name làm id cho select
       name,
     }));
 

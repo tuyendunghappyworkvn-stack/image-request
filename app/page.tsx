@@ -13,9 +13,15 @@ type CompanyOption = {
   name: string;
 };
 
+type JobOption = {
+  position: string;
+  code: string; // 👈 MÃ ẨN
+};
+
 type JobInput = {
   company_name: string;
   position_name: string;
+  job_code?: string; // 👈 MÃ ẨN TRONG STATE
 };
 
 type ContactHistory = {
@@ -53,7 +59,7 @@ export default function HomePage() {
   ====================== */
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [jobsByCompany, setJobsByCompany] =
-    useState<Record<string, string[]>>({});
+    useState<Record<string, JobOption[]>>({});
 
   /* =====================
      PREVIEW STATE
@@ -121,29 +127,18 @@ export default function HomePage() {
   ) {
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
 
-    const { clientX, clientY } = e;
-
     hoverTimer.current = setTimeout(() => {
-      setMousePos({
-        x: clientX + 24,
-        y: clientY + 24,
-      });
+      setMousePos({ x: e.clientX + 24, y: e.clientY + 24 });
       setHoverImage(thumbnail);
     }, 200);
   }
 
   function handleMouseMove(e: React.MouseEvent) {
-    setMousePos({
-      x: e.clientX + 24,
-      y: e.clientY + 24,
-    });
+    setMousePos({ x: e.clientX + 24, y: e.clientY + 24 });
   }
 
   function handleMouseLeave() {
-    if (hoverTimer.current) {
-      clearTimeout(hoverTimer.current);
-      hoverTimer.current = null;
-    }
+    if (hoverTimer.current) clearTimeout(hoverTimer.current);
     setHoverImage(null);
   }
 
@@ -173,41 +168,19 @@ export default function HomePage() {
       jobs: jobs.map((j) => ({
         company: j.company_name,
         position: j.position_name,
+        job_code: j.job_code, // 👈 GỬI MÃ NGẦM
       })),
-      contact: {
-        email,
-        zalo,
-      },
+      contact: { email, zalo },
     };
 
     try {
       const res = await fetch("/api/submit-request", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) throw new Error("Webhook error");
-
-      const history: ContactHistory[] = JSON.parse(
-        localStorage.getItem("contact_history") || "[]"
-      );
-
-      const newItem = { email, zalo };
-
-      const updated = [
-        newItem,
-        ...history.filter(
-          (h) => h.email !== email || h.zalo !== zalo
-        ),
-      ].slice(0, 5);
-
-      localStorage.setItem(
-        "contact_history",
-        JSON.stringify(updated)
-      );
 
       alert("✅ Đã gửi yêu cầu tạo ảnh, hệ thống đang xử lý!");
     } catch (err) {
@@ -234,12 +207,11 @@ export default function HomePage() {
               <button
                 key={n}
                 onClick={() => setJobCount(n)}
-                className={`px-4 py-2 rounded border font-medium transition
-                  ${
-                    jobCount === n
-                      ? "bg-orange-500 text-white border-orange-500"
-                      : "border-orange-400 text-orange-500 hover:bg-orange-50"
-                  }`}
+                className={`px-4 py-2 rounded border font-medium transition ${
+                  jobCount === n
+                    ? "bg-orange-500 text-white border-orange-500"
+                    : "border-orange-400 text-orange-500 hover:bg-orange-50"
+                }`}
               >
                 {n} job
               </button>
@@ -253,26 +225,16 @@ export default function HomePage() {
             2️⃣ Chọn mẫu ({templates.length} mẫu)
           </div>
 
-          {loading && <div>Đang tải mẫu...</div>}
-
-          {!loading && templates.length === 0 && jobCount && (
-            <div className="text-gray-500">
-              Chưa có mẫu cho số job này
-            </div>
-          )}
-
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
             {templates.map((tpl) => {
               const isActive =
-                selectedTemplate?.template_code ===
-                tpl.template_code;
+                selectedTemplate?.template_code === tpl.template_code;
 
               return (
                 <div
                   key={tpl.template_code}
                   onClick={() => {
                     setSelectedTemplate(tpl);
-
                     if (jobCount) {
                       setJobs(
                         Array.from({ length: jobCount }, () => ({
@@ -287,51 +249,19 @@ export default function HomePage() {
                   }
                   onMouseMove={handleMouseMove}
                   onMouseLeave={handleMouseLeave}
-                  style={{
-                    border: isActive
-                      ? "2px solid #f97316"
-                      : "2px solid #e5e7eb",
-                    boxShadow: isActive
-                      ? "0 8px 20px rgba(249,115,22,0.25)"
-                      : "none",
-                    background: isActive ? "#fff7ed" : "#fff",
-                    borderRadius: 12,
-                    cursor: "pointer",
-                    transition: "all 0.2s ease",
-                    position: "relative",
-                  }}
+                  className={`border rounded-xl cursor-pointer transition ${
+                    isActive
+                      ? "border-orange-500 bg-orange-50 shadow-lg"
+                      : "border-gray-200"
+                  }`}
                 >
                   <img
                     src={tpl.thumbnail}
-                    alt={tpl.template_code}
                     className="w-full h-40 object-contain bg-gray-50 rounded"
                   />
-
                   <div className="p-2 text-center font-medium">
                     {tpl.template_code}
                   </div>
-
-                  {isActive && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 8,
-                        right: 8,
-                        width: 26,
-                        height: 26,
-                        borderRadius: "50%",
-                        background: "#f97316",
-                        color: "#fff",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      ✓
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -347,11 +277,10 @@ export default function HomePage() {
 
             <div className="bg-orange-50 p-4 rounded-lg">
               <input
-                type="text"
                 value={imageTitle}
                 onChange={(e) => setImageTitle(e.target.value)}
                 placeholder="VD: IDEA POD"
-                className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+                className="w-full border rounded px-4 py-3 bg-white"
               />
             </div>
 
@@ -370,8 +299,8 @@ export default function HomePage() {
                     className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
                   >
                     <select
-                      className="border rounded px-3 py-2"
                       value={job.company_name}
+                      className="border rounded px-3 py-2"
                       onChange={(e) => {
                         const newJobs = [...jobs];
                         newJobs[index] = {
@@ -390,20 +319,27 @@ export default function HomePage() {
                     </select>
 
                     <select
-                      className="border rounded px-3 py-2"
                       value={job.position_name}
                       disabled={!job.company_name}
+                      className="border rounded px-3 py-2"
                       onChange={(e) => {
+                        const selected = jobOptions.find(
+                          (j) => j.position === e.target.value
+                        );
+
                         const newJobs = [...jobs];
-                        newJobs[index].position_name =
-                          e.target.value;
+                        newJobs[index] = {
+                          ...newJobs[index],
+                          position_name: e.target.value,
+                          job_code: selected?.code,
+                        };
                         setJobs(newJobs);
                       }}
                     >
                       <option value="">Chọn công việc</option>
                       {jobOptions.map((j) => (
-                        <option key={j} value={j}>
-                          {j}
+                        <option key={j.code} value={j.position}>
+                          {j.position}
                         </option>
                       ))}
                     </select>
@@ -417,20 +353,17 @@ export default function HomePage() {
                 5️⃣ Thông tin liên hệ
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg">
                 <input
-                  type="email"
-                  placeholder="Nhập email liên hệ"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email"
                   className="border rounded px-3 py-2"
                 />
-
                 <input
-                  type="text"
-                  placeholder="Nhập số Zalo"
                   value={zalo}
                   onChange={(e) => setZalo(e.target.value)}
+                  placeholder="Zalo"
                   className="border rounded px-3 py-2"
                 />
               </div>
@@ -438,7 +371,7 @@ export default function HomePage() {
               <div className="mt-8 text-center">
                 <button
                   onClick={handleSubmit}
-                  className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
+                  className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600"
                 >
                   Tạo ảnh
                 </button>
@@ -448,22 +381,15 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* PREVIEW */}
       {hoverImage && (
         <div
           className="fixed z-50 pointer-events-none"
-          style={{
-            left: mousePos.x,
-            top: mousePos.y - 150,
-          }}
+          style={{ left: mousePos.x, top: mousePos.y - 150 }}
         >
-          <div className="bg-white p-3 rounded shadow-2xl w-[420px] max-h-[70vh] overflow-auto">
-            <img
-              src={hoverImage}
-              alt="Preview"
-              className="w-full h-auto rounded"
-            />
-          </div>
+          <img
+            src={hoverImage}
+            className="w-[420px] rounded shadow-xl"
+          />
         </div>
       )}
     </main>
