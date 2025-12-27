@@ -345,13 +345,15 @@ export default function HomePage() {
               3️⃣ Tiêu đề ảnh
             </h3>
 
-            <input
-              type="text"
-              value={imageTitle}
-              onChange={(e) => setImageTitle(e.target.value)}
-              placeholder="VD: List job POD Hà Nội tháng 1/2025"
-              className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400"
-            />
+            <div className="bg-orange-50 p-4 rounded-lg">
+              <input
+                type="text"
+                value={imageTitle}
+                onChange={(e) => setImageTitle(e.target.value)}
+                placeholder="VD: IDEA POD"
+                className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+              />
+            </div>
 
             <h3 className="text-lg font-semibold mb-4 mt-8">
               4️⃣ Chọn thông tin công việc
