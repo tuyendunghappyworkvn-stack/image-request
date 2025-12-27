@@ -29,6 +29,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
 
   /* =====================
+     IMAGE TITLE
+  ====================== */
+  const [imageTitle, setImageTitle] = useState("");
+
+  /* =====================
      CONTACT INFO
   ====================== */
   const [email, setEmail] = useState("");
@@ -151,12 +156,18 @@ export default function HomePage() {
       return;
     }
 
+    if (!imageTitle) {
+      alert("Vui lòng nhập tiêu đề ảnh");
+      return;
+    }
+
     if (!email || !zalo) {
       alert("Vui lòng nhập email và số Zalo");
       return;
     }
 
     const payload = {
+      image_title: imageTitle,
       job_count: jobCount,
       template_code: selectedTemplate.template_code,
       jobs: jobs.map((j) => ({
@@ -180,7 +191,6 @@ export default function HomePage() {
 
       if (!res.ok) throw new Error("Webhook error");
 
-      /* ===== SAVE CONTACT HISTORY ===== */
       const history: ContactHistory[] = JSON.parse(
         localStorage.getItem("contact_history") || "[]"
       );
@@ -328,11 +338,23 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 3 + 4 + SUBMIT */}
+        {/* STEP 3 */}
         {selectedTemplate && (
           <div className="mt-10">
             <h3 className="text-lg font-semibold mb-4">
-              3️⃣ Chọn thông tin công việc
+              3️⃣ Tiêu đề ảnh
+            </h3>
+
+            <input
+              type="text"
+              value={imageTitle}
+              onChange={(e) => setImageTitle(e.target.value)}
+              placeholder="VD: List job POD Hà Nội tháng 1/2025"
+              className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+
+            <h3 className="text-lg font-semibold mb-4 mt-8">
+              4️⃣ Chọn thông tin công việc
             </h3>
 
             <div className="space-y-3">
@@ -390,7 +412,7 @@ export default function HomePage() {
 
             <div className="mt-10">
               <h3 className="text-lg font-semibold mb-4">
-                4️⃣ Thông tin liên hệ
+                5️⃣ Thông tin liên hệ
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg">
@@ -419,7 +441,7 @@ export default function HomePage() {
                   Tạo ảnh
                 </button>
               </div>
-            </div> 
+            </div>
           </div>
         )}
       </div>
