@@ -59,6 +59,7 @@ export default function HomePage() {
     setLoading(true);
     setTemplates([]);
     setSelectedTemplate(null);
+    setResultImage(null);
 
     fetch(`/api/templates?job_count=${jobCount}`)
       .then((res) => res.json())
@@ -112,7 +113,7 @@ export default function HomePage() {
     }
 
     if (!imageTitle || !email || !zalo) {
-      alert("Vui lòng nhập đầy đủ thông tin");
+      alert("Vui lòng nhập đầy đủ tiêu đề, email và Zalo");
       return;
     }
 
@@ -175,9 +176,10 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 2 */}
+        {/* STEP 2 → 5 */}
         {jobCount && (
           <>
+            {/* STEP 2 */}
             <div className="mb-8">
               <div className="font-semibold mb-3">
                 2️⃣ Chọn mẫu ({templates.length} mẫu)
@@ -210,7 +212,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* STEP 3 + 4 */}
+            {/* STEP 3 */}
             <h3 className="text-lg font-semibold mb-4">
               3️⃣ Tiêu đề ảnh
             </h3>
@@ -221,11 +223,12 @@ export default function HomePage() {
               placeholder="VD: IDEA POD"
             />
 
+            {/* STEP 4 */}
             <h3 className="text-lg font-semibold mb-4">
               4️⃣ Chọn thông tin công việc
             </h3>
 
-            <div className="space-y-3">
+            <div className="space-y-3 mb-8">
               {jobs.map((job, index) => {
                 const jobOptions =
                   jobsByCompany[job.company_name] || [];
@@ -280,7 +283,26 @@ export default function HomePage() {
               })}
             </div>
 
-            <div className="mt-8 text-center">
+            {/* STEP 5 */}
+            <h3 className="text-lg font-semibold mb-4">
+              5️⃣ Thông tin liên hệ
+            </h3>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email"
+                className="border px-3 py-2 rounded"
+              />
+              <input
+                value={zalo}
+                onChange={(e) => setZalo(e.target.value)}
+                placeholder="SĐT Zalo"
+                className="border px-3 py-2 rounded"
+              />
+            </div>
+
+            <div className="text-center">
               <button
                 onClick={handleSubmit}
                 className="px-8 py-3 bg-orange-500 text-white rounded-lg"
@@ -291,6 +313,46 @@ export default function HomePage() {
           </>
         )}
       </div>
+
+      {/* RESULT PREVIEW */}
+      {resultImage && (
+        <div className="max-w-5xl mx-auto mt-12 bg-white rounded-xl p-6 shadow">
+          <h3 className="text-lg font-semibold mb-4 text-center text-orange-600">
+            Ảnh đã tạo
+          </h3>
+
+          <div className="flex justify-center">
+            <img
+              src={resultImage.preview_url}
+              alt="Generated preview"
+              className="max-w-full rounded-lg shadow-lg"
+            />
+          </div>
+
+          <div className="flex justify-center mt-6">
+            <a
+              href={resultImage.download_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600"
+            >
+              ⬇️ Tải ảnh
+            </a>
+          </div>
+        </div>
+      )}
+
+      {hoverImage && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{ left: mousePos.x, top: mousePos.y - 150 }}
+        >
+          <img
+            src={hoverImage}
+            className="w-[420px] rounded shadow-xl"
+          />
+        </div>
+      )}
     </main>
   );
 }
