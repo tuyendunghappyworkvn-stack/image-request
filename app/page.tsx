@@ -15,13 +15,13 @@ type CompanyOption = {
 
 type JobOption = {
   position: string;
-  code: string; // 👈 MÃ ẨN
+  code: string;
 };
 
 type JobInput = {
   company_name: string;
   position_name: string;
-  job_code?: string; // 👈 MÃ ẨN TRONG STATE
+  job_code?: string;
 };
 
 type ContactHistory = {
@@ -35,67 +35,39 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [resultImage, setResultImage] = useState<any | null>(null);
 
-  /* =====================
-     IMAGE TITLE
-  ====================== */
   const [imageTitle, setImageTitle] = useState("");
-
-  /* =====================
-     CONTACT INFO
-  ====================== */
   const [email, setEmail] = useState("");
   const [zalo, setZalo] = useState("");
 
-  // 👉 CHỌN TEMPLATE
   const [selectedTemplate, setSelectedTemplate] =
     useState<Template | null>(null);
 
-  /* =====================
-     JOB INPUT
-  ====================== */
   const [jobs, setJobs] = useState<JobInput[]>([]);
 
-  /* =====================
-     OPTIONS FROM LARK
-  ====================== */
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [jobsByCompany, setJobsByCompany] =
     useState<Record<string, JobOption[]>>({});
 
-  /* =====================
-     PREVIEW STATE
-  ====================== */
   const [hoverImage, setHoverImage] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const hoverTimer = useRef<NodeJS.Timeout | null>(null);
 
-  /* =====================
-     LOAD TEMPLATE BY JOB
-  ====================== */
+  /* LOAD TEMPLATE */
   useEffect(() => {
     if (!jobCount) return;
 
     setLoading(true);
     setTemplates([]);
     setSelectedTemplate(null);
-    setJobs([]);
 
     fetch(`/api/templates?job_count=${jobCount}`)
       .then((res) => res.json())
-      .then((data) => {
-        setTemplates(data.data || []);
-      })
-      .catch(() => {
-        setTemplates([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .then((data) => setTemplates(data.data || []))
+      .catch(() => setTemplates([]))
+      .finally(() => setLoading(false));
   }, [jobCount]);
 
-  /* =====================
-     LOAD OPTIONS FROM LARK
-  ====================== */
+  /* LOAD LARK OPTIONS */
   useEffect(() => {
     fetch("/api/lark/options")
       .then((res) => res.json())
@@ -105,29 +77,19 @@ export default function HomePage() {
       });
   }, []);
 
-  /* =====================
-     LOAD CONTACT HISTORY
-  ====================== */
+  /* LOAD CONTACT */
   useEffect(() => {
     const history: ContactHistory[] = JSON.parse(
       localStorage.getItem("contact_history") || "[]"
     );
-
     if (history.length > 0) {
       setEmail(history[0].email || "");
       setZalo(history[0].zalo || "");
     }
   }, []);
 
-  /* =====================
-     HOVER HANDLERS
-  ====================== */
-  function handleMouseEnter(
-    e: React.MouseEvent,
-    thumbnail: string
-  ) {
+  function handleMouseEnter(e: React.MouseEvent, thumbnail: string) {
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
-
     hoverTimer.current = setTimeout(() => {
       setMousePos({ x: e.clientX + 24, y: e.clientY + 24 });
       setHoverImage(thumbnail);
@@ -143,22 +105,14 @@ export default function HomePage() {
     setHoverImage(null);
   }
 
-  /* =====================
-     SUBMIT TO N8N
-  ====================== */
   async function handleSubmit() {
     if (!jobCount || !selectedTemplate) {
       alert("Vui lòng chọn số job và mẫu ảnh");
       return;
     }
 
-    if (!imageTitle) {
-      alert("Vui lòng nhập tiêu đề ảnh");
-      return;
-    }
-
-    if (!email || !zalo) {
-      alert("Vui lòng nhập email và số Zalo");
+    if (!imageTitle || !email || !zalo) {
+      alert("Vui lòng nhập đầy đủ thông tin");
       return;
     }
 
@@ -166,11 +120,7 @@ export default function HomePage() {
       image_title: imageTitle,
       job_count: jobCount,
       template_code: selectedTemplate.template_code,
-      jobs: jobs.map((j) => ({
-        company: j.company_name,
-        position: j.position_name,
-        job_code: j.job_code, // 👈 GỬI MÃ NGẦM
-      })),
+      jobs,
       contact: { email, zalo },
     };
 
@@ -185,9 +135,8 @@ export default function HomePage() {
 
       const data = await res.json();
       setResultImage(data);
-    } catch (err) {
-      console.error(err);
-      alert("❌ Gửi dữ liệu thất bại, vui lòng thử lại");
+    } catch {
+      alert("❌ Gửi dữ liệu thất bại");
     }
   }
 
@@ -200,19 +149,24 @@ export default function HomePage() {
 
         {/* STEP 1 */}
         <div className="mb-6">
-          <div className="font-semibold mb-3">
-            1️⃣ Bạn cần bao nhiêu job?
-          </div>
-
+          <div className="font-semibold mb-3">1️⃣ Bạn cần bao nhiêu job?</div>
           <div className="flex gap-3 flex-wrap">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <button
                 key={n}
-                onClick={() => setJobCount(n)}
-                className={`px-4 py-2 rounded border font-medium transition ${
+                onClick={() => {
+                  setJobCount(n);
+                  setJobs(
+                    Array.from({ length: n }, () => ({
+                      company_name: "",
+                      position_name: "",
+                    }))
+                  );
+                }}
+                className={`px-4 py-2 rounded border ${
                   jobCount === n
-                    ? "bg-orange-500 text-white border-orange-500"
-                    : "border-orange-400 text-orange-500 hover:bg-orange-50"
+                    ? "bg-orange-500 text-white"
+                    : "border-orange-400 text-orange-500"
                 }`}
               >
                 {n} job
@@ -222,71 +176,52 @@ export default function HomePage() {
         </div>
 
         {/* STEP 2 */}
-        <div>
-          <div className="font-semibold mb-3">
-            2️⃣ Chọn mẫu ({templates.length} mẫu)
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-            {templates.map((tpl) => {
-              const isActive =
-                selectedTemplate?.template_code === tpl.template_code;
-
-              return (
-                <div
-                  key={tpl.template_code}
-                  onClick={() => {
-                    setSelectedTemplate(tpl);
-                    if (jobCount) {
-                      setJobs(
-                        Array.from({ length: jobCount }, () => ({
-                          company_name: "",
-                          position_name: "",
-                        }))
-                      );
+        {jobCount && (
+          <>
+            <div className="mb-8">
+              <div className="font-semibold mb-3">
+                2️⃣ Chọn mẫu ({templates.length} mẫu)
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {templates.map((tpl) => (
+                  <div
+                    key={tpl.template_code}
+                    onClick={() => setSelectedTemplate(tpl)}
+                    onMouseEnter={(e) =>
+                      handleMouseEnter(e, tpl.thumbnail)
                     }
-                  }}
-                  onMouseEnter={(e) =>
-                    handleMouseEnter(e, tpl.thumbnail)
-                  }
-                  onMouseMove={handleMouseMove}
-                  onMouseLeave={handleMouseLeave}
-                  className={`border rounded-xl cursor-pointer transition ${
-                    isActive
-                      ? "border-orange-500 bg-orange-50 shadow-lg"
-                      : "border-gray-200"
-                  }`}
-                >
-                  <img
-                    src={tpl.thumbnail}
-                    className="w-full h-40 object-contain bg-gray-50 rounded"
-                  />
-                  <div className="p-2 text-center font-medium">
-                    {tpl.template_code}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={handleMouseLeave}
+                    className={`border rounded-xl cursor-pointer ${
+                      selectedTemplate?.template_code === tpl.template_code
+                        ? "border-orange-500 bg-orange-50"
+                        : "border-gray-200"
+                    }`}
+                  >
+                    <img
+                      src={tpl.thumbnail}
+                      className="w-full h-40 object-contain bg-gray-50"
+                    />
+                    <div className="p-2 text-center font-medium">
+                      {tpl.template_code}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                ))}
+              </div>
+            </div>
 
-        {/* STEP 3 */}
-        {selectedTemplate && (
-          <div className="mt-10">
+            {/* STEP 3 + 4 */}
             <h3 className="text-lg font-semibold mb-4">
               3️⃣ Tiêu đề ảnh
             </h3>
+            <input
+              value={imageTitle}
+              onChange={(e) => setImageTitle(e.target.value)}
+              className="w-full border rounded px-4 py-3 mb-6"
+              placeholder="VD: IDEA POD"
+            />
 
-            <div className="bg-orange-50 p-4 rounded-lg">
-              <input
-                value={imageTitle}
-                onChange={(e) => setImageTitle(e.target.value)}
-                placeholder="VD: IDEA POD"
-                className="w-full border rounded px-4 py-3 bg-white"
-              />
-            </div>
-
-            <h3 className="text-lg font-semibold mb-4 mt-8">
+            <h3 className="text-lg font-semibold mb-4">
               4️⃣ Chọn thông tin công việc
             </h3>
 
@@ -294,15 +229,10 @@ export default function HomePage() {
               {jobs.map((job, index) => {
                 const jobOptions =
                   jobsByCompany[job.company_name] || [];
-
                 return (
-                  <div
-                    key={index}
-                    className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg"
-                  >
+                  <div key={index} className="grid grid-cols-2 gap-4">
                     <select
                       value={job.company_name}
-                      className="border rounded px-3 py-2"
                       onChange={(e) => {
                         const newJobs = [...jobs];
                         newJobs[index] = {
@@ -311,6 +241,7 @@ export default function HomePage() {
                         };
                         setJobs(newJobs);
                       }}
+                      className="border px-3 py-2 rounded"
                     >
                       <option value="">Chọn công ty</option>
                       {companies.map((c) => (
@@ -323,12 +254,10 @@ export default function HomePage() {
                     <select
                       value={job.position_name}
                       disabled={!job.company_name}
-                      className="border rounded px-3 py-2"
                       onChange={(e) => {
                         const selected = jobOptions.find(
                           (j) => j.position === e.target.value
                         );
-
                         const newJobs = [...jobs];
                         newJobs[index] = {
                           ...newJobs[index],
@@ -337,6 +266,7 @@ export default function HomePage() {
                         };
                         setJobs(newJobs);
                       }}
+                      className="border px-3 py-2 rounded"
                     >
                       <option value="">Chọn công việc</option>
                       {jobOptions.map((j) => (
@@ -350,77 +280,17 @@ export default function HomePage() {
               })}
             </div>
 
-            <div className="mt-10">
-              <h3 className="text-lg font-semibold mb-4">
-                5️⃣ Thông tin liên hệ
-              </h3>
-
-              <div className="grid grid-cols-2 gap-4 bg-orange-50 p-4 rounded-lg">
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  className="border rounded px-3 py-2"
-                />
-                <input
-                  value={zalo}
-                  onChange={(e) => setZalo(e.target.value)}
-                  placeholder="Zalo"
-                  className="border rounded px-3 py-2"
-                />
-              </div>
-
-              <div className="mt-8 text-center">
-                <button
-                  onClick={handleSubmit}
-                  className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600"
-                >
-                  Tạo ảnh
-                </button>
-              </div>
+            <div className="mt-8 text-center">
+              <button
+                onClick={handleSubmit}
+                className="px-8 py-3 bg-orange-500 text-white rounded-lg"
+              >
+                Tạo ảnh
+              </button>
             </div>
-          </div>
+          </>
         )}
       </div>
-
-      {hoverImage && (
-        <div
-          className="fixed z-50 pointer-events-none"
-          style={{ left: mousePos.x, top: mousePos.y - 150 }}
-        >
-          <img
-            src={hoverImage}
-            className="w-[420px] rounded shadow-xl"
-          />
-        </div>
-      )}
-      {/* =====================
-        RESULT PREVIEW
-        ===================== */}
-      {resultImage && (
-        <div className="max-w-5xl mx-auto mt-12 bg-white rounded-xl p-6 shadow">
-          <h3 className="text-lg font-semibold mb-4 text-center text-orange-600">
-            Ảnh đã tạo
-          </h3>
-
-          <div className="flex justify-center">
-            <img
-              src={resultImage.preview_url}
-              alt="Generated preview"
-              className="max-w-full rounded-lg shadow-lg"
-            />
-          </div>
-
-          <div className="flex justify-center mt-6">
-            <a
-              href={resultImage.download_url}
-              className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
-            >
-              ⬇️ Tải ảnh
-            </a>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
