@@ -23,7 +23,11 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    // ✅ LẤY RESPONSE TỪ n8n
+    const data = await res.json();
+
+    // ✅ TRẢ NGUYÊN DATA VỀ FRONTEND
+    return NextResponse.json(data);
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err.message },
