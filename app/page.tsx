@@ -135,7 +135,7 @@ export default function HomePage() {
       if (!res.ok) throw new Error("Webhook error");
 
       const data = await res.json();
-      setResultImage(data);
+      setResultImage(Array.isArray(data) ? data[0] : data);
     } catch {
       alert("❌ Gửi dữ liệu thất bại");
     }
