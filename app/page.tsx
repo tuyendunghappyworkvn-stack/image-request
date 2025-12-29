@@ -316,29 +316,38 @@ export default function HomePage() {
 
       {/* RESULT PREVIEW */}
       {resultImage && (
-        <div className="max-w-5xl mx-auto mt-12 bg-white rounded-xl p-6 shadow">
-          <h3 className="text-lg font-semibold mb-4 text-center text-orange-600">
+        <div className="max-w-5xl mx-auto mt-12 bg-white rounded-xl p-6 shadow text-center">
+          <h3 className="text-lg font-semibold mb-4 text-orange-600">
             Ảnh đã tạo
           </h3>
 
-          <div className="flex justify-center">
-            <img
-              src={resultImage.preview_url}
-              alt="Generated preview"
-              className="max-w-full rounded-lg shadow-lg"
-            />
+          <div className="flex justify-center gap-4">
+            {resultImage.view_url && (
+              <a
+                href={resultImage.view_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                👁️ Xem ảnh
+              </a>
+            )}
+
+            {resultImage.download_url && (
+              <a
+                href={resultImage.download_url}
+                className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+              >
+                ⬇️ Tải ảnh
+              </a>
+            )}
           </div>
 
-          <div className="flex justify-center mt-6">
-            <a
-              href={resultImage.download_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600"
-            >
-              ⬇️ Tải ảnh
-            </a>
-          </div>
+          {resultImage.file_name && (
+            <p className="text-sm text-gray-500 mt-3">
+              File: {resultImage.file_name}
+            </p>
+          )}
         </div>
       )}
 
