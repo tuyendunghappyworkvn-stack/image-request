@@ -184,38 +184,39 @@ export default function HomePage() {
               <div className="font-semibold mb-3">
                 2️⃣ Chọn mẫu ({templates.length} mẫu)
               </div>
-              
+
               {loading ? (
                 <div className="py-10 text-center text-gray-500">
                   ⏳ Đang tải mẫu ảnh, vui lòng chờ...
                 </div>
               ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {templates.map((tpl) => (
-                  <div
-                    key={tpl.template_code}
-                    onClick={() => setSelectedTemplate(tpl)}
-                    onMouseEnter={(e) =>
-                      handleMouseEnter(e, tpl.thumbnail)
-                    }
-                    onMouseMove={handleMouseMove}
-                    onMouseLeave={handleMouseLeave}
-                    className={`border rounded-xl cursor-pointer ${
-                      selectedTemplate?.template_code === tpl.template_code
-                        ? "border-orange-500 bg-orange-50"
-                        : "border-gray-200"
-                    }`}
-                  >
-                    <img
-                      src={tpl.thumbnail}
-                      className="w-full h-40 object-contain bg-gray-50"
-                    />
-                    <div className="p-2 text-center font-medium">
-                      {tpl.template_code}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {templates.map((tpl) => (
+                    <div
+                      key={tpl.template_code}
+                      onClick={() => setSelectedTemplate(tpl)}
+                      onMouseEnter={(e) =>
+                        handleMouseEnter(e, tpl.thumbnail)
+                      }
+                      onMouseMove={handleMouseMove}
+                      onMouseLeave={handleMouseLeave}
+                      className={`border rounded-xl cursor-pointer ${
+                        selectedTemplate?.template_code === tpl.template_code
+                          ? "border-orange-500 bg-orange-50"
+                          : "border-gray-200"
+                      }`}
+                    >
+                      <img
+                        src={tpl.thumbnail}
+                        className="w-full h-40 object-contain bg-gray-50"
+                      />
+                      <div className="p-2 text-center font-medium">
+                        {tpl.template_code}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* STEP 3 */}
