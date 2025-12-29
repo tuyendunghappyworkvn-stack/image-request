@@ -327,9 +327,9 @@ export default function HomePage() {
                 href={resultImage.view_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="px-6 py-3 bg-[#2DB24A] text-white rounded-lg hover:bg-[#24923D]"
               >
-                👁️ Xem ảnh
+                Xem ảnh
               </a>
             )}
 
@@ -338,7 +338,7 @@ export default function HomePage() {
                 href={resultImage.download_url}
                 className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
               >
-                ⬇️ Tải ảnh
+                Tải ảnh
               </a>
             )}
           </div>
