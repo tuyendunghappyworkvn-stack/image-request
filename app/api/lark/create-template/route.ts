@@ -48,6 +48,10 @@ export async function POST(req: Request) {
       formData.get("slide_id_mau") || ""
     ).trim();
 
+    // ✅ TEXT JD (CHECKBOX)
+    const textJD =
+      String(formData.get("text_jd") || "").toLowerCase() === "true";
+
     // ✅ validate
     if (!file || !style || Number.isNaN(jobCount)) {
       return NextResponse.json(
@@ -94,6 +98,9 @@ export async function POST(req: Request) {
             // ✅ NEW COLUMNS
             PresentationID: presentationId,
             slideID_mau: slideIdMau,
+
+            // ✅ TEXT JD → CHECKBOX COLUMN
+            text_jd: textJD,
           },
         }),
       }

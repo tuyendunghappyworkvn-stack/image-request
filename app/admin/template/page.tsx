@@ -8,7 +8,10 @@ export default function AdminTemplatePage() {
   const [style, setStyle] = useState("");
   const [jobCount, setJobCount] = useState<number>(0);
 
-  // ✅ 2 STATE MỚI
+  // ✅ STATE MỚI: TEXT JD
+  const [textJD, setTextJD] = useState<boolean>(false);
+
+  // ✅ 2 STATE CŨ
   const [presentationId, setPresentationId] = useState("");
   const [slideIdMau, setSlideIdMau] = useState("");
 
@@ -21,6 +24,7 @@ export default function AdminTemplatePage() {
     setPreview(null);
     setStyle("");
     setJobCount(0);
+    setTextJD(false);
     setPresentationId("");
     setSlideIdMau("");
 
@@ -52,7 +56,10 @@ export default function AdminTemplatePage() {
     formData.append("style", style);
     formData.append("job_count", String(jobCount));
 
-    // ✅ GỬI THÊM 2 BIẾN MỚI
+    // ✅ GỬI TEXT JD
+    formData.append("text_jd", textJD ? "true" : "false");
+
+    // ✅ 2 BIẾN CŨ
     formData.append("presentation_id", presentationId);
     formData.append("slide_id_mau", slideIdMau);
 
@@ -139,7 +146,21 @@ export default function AdminTemplatePage() {
             />
           </div>
 
-          {/* ✅ PRESENTATION ID */}
+          {/* ✅ CHECKBOX TEXT JD */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="textJD"
+              checked={textJD}
+              onChange={(e) => setTextJD(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <label htmlFor="textJD" className="text-sm font-medium">
+              Có text JD
+            </label>
+          </div>
+
+          {/* PRESENTATION ID */}
           <div>
             <label className="font-medium">Presentation ID</label>
             <input
@@ -151,7 +172,7 @@ export default function AdminTemplatePage() {
             />
           </div>
 
-          {/* ✅ SLIDE ID MẪU */}
+          {/* SLIDE ID MẪU */}
           <div>
             <label className="font-medium">Slide ID mẫu</label>
             <input
