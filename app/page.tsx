@@ -288,72 +288,67 @@ export default function HomePage() {
               4️⃣ Chọn thông tin công việc
             </h3>
 
-            <div className="space-y-3 mb-8">
-              {jobs.map((job, index) => {
-                const jobOptions =
-                  jobsByCompany[job.company_name] || [];
-                return (
-                  <div key={index} className="grid grid-cols-2 gap-4">
-                    <select
-                      value={job.company_name}
-                      disabled={optionLoading}
-                      onChange={(e) => {
-                        const newJobs = [...jobs];
-                        newJobs[index] = {
-                          company_name: e.target.value,
-                          position_name: "",
-                        };
-                        setJobs(newJobs);
-                      }}
-                      className="border px-3 py-2 rounded"
-                    >
-                      <option value="">
-                        {optionLoading
-                          ? "Đang tải công ty..."
-                          : "Chọn công ty"}
-                      </option>
-                      {!optionLoading &&
-                        companies.map((c) => (
+            {optionLoading ? (
+              <div className="py-6 text-gray-500">
+                ⏳ Đang chuẩn bị danh sách công ty & công việc...
+              </div>
+            ) : (
+              <div className="space-y-3 mb-8">
+                {jobs.map((job, index) => {
+                  const jobOptions = jobsByCompany[job.company_name] || [];
+
+                  return (
+                    <div key={index} className="grid grid-cols-2 gap-4">
+                      <select
+                        value={job.company_name}
+                        onChange={(e) => {
+                          const newJobs = [...jobs];
+                          newJobs[index] = {
+                            company_name: e.target.value,
+                            position_name: "",
+                          };
+                          setJobs(newJobs);
+                        }}
+                        className="border px-3 py-2 rounded"
+                      >
+                        <option value="">Chọn công ty</option>
+                        {companies.map((c) => (
                           <option key={c.id} value={c.name}>
                             {c.name}
                           </option>
                         ))}
-                    </select>
+                      </select>
 
-                    <select
-                      value={job.position_name}
-                      disabled={optionLoading || !job.company_name}
-                      onChange={(e) => {
-                        const selected = jobOptions.find(
-                          (j) => j.position === e.target.value
-                        );
-                        const newJobs = [...jobs];
-                        newJobs[index] = {
-                          ...newJobs[index],
-                          position_name: e.target.value,
-                          job_code: selected?.code,
-                        };
-                        setJobs(newJobs);
-                      }}
-                      className="border px-3 py-2 rounded"
-                    >
-                      <option value="">
-                        {optionLoading
-                          ? "Đang tải công việc..."
-                          : "Chọn công việc"}
-                      </option>
-                      {!optionLoading &&
-                        jobOptions.map((j) => (
+                      <select
+                        value={job.position_name}
+                        disabled={!job.company_name}
+                        onChange={(e) => {
+                          const selected = jobOptions.find(
+                            (j) => j.position === e.target.value
+                          );
+                          const newJobs = [...jobs];
+                          newJobs[index] = {
+                            ...newJobs[index],
+                            position_name: e.target.value,
+                            job_code: selected?.code,
+                          };
+                          setJobs(newJobs);
+                        }}
+                        className="border px-3 py-2 rounded"
+                      >
+                        <option value="">Chọn công việc</option>
+                        {jobOptions.map((j) => (
                           <option key={j.code} value={j.position}>
                             {j.position}
                           </option>
                         ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
             {/* STEP 5 */}
             <h3 className="text-lg font-semibold mb-4">
               5️⃣ Thông tin liên hệ
