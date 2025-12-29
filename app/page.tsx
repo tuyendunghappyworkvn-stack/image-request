@@ -48,11 +48,16 @@ export default function HomePage() {
   const [jobsByCompany, setJobsByCompany] =
     useState<Record<string, JobOption[]>>({});
 
+  // 👉 loading riêng cho option
+  const [optionLoading, setOptionLoading] = useState(true);
+
   const [hoverImage, setHoverImage] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const hoverTimer = useRef<NodeJS.Timeout | null>(null);
 
-  /* LOAD TEMPLATE */
+  /* =========================
+     LOAD TEMPLATE
+  ========================= */
   useEffect(() => {
     if (!jobCount) return;
 
@@ -68,17 +73,65 @@ export default function HomePage() {
       .finally(() => setLoading(false));
   }, [jobCount]);
 
-  /* LOAD LARK OPTIONS */
-  useEffect(() => {
+  /* =========================
+     LOAD OPTIONS (CACHE + VERSION)
+  ========================= */
+
+  function loadOptions() {
+    const cached = localStorage.getItem("lark_options");
+
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        setCompanies(parsed.companies || []);
+        setJobsByCompany(parsed.jobsByCompany || {});
+        setOptionLoading(false);
+        return;
+      } catch {
+        localStorage.removeItem("lark_options");
+      }
+    }
+
+    setOptionLoading(true);
+
     fetch("/api/lark/options")
       .then((res) => res.json())
       .then((data) => {
         setCompanies(data.companies || []);
         setJobsByCompany(data.jobsByCompany || {});
+
+        localStorage.setItem(
+          "lark_options",
+          JSON.stringify({
+            companies: data.companies || [],
+            jobsByCompany: data.jobsByCompany || {},
+            cachedAt: Date.now(),
+          })
+        );
+      })
+      .finally(() => setOptionLoading(false));
+  }
+
+  useEffect(() => {
+    fetch("/api/option-version")
+      .then((res) => res.json())
+      .then((data) => {
+        const localVersion = localStorage.getItem("option_version");
+
+        if (localVersion !== String(data.version)) {
+          // 👉 có thay đổi từ n8n
+          localStorage.removeItem("lark_options");
+          localStorage.setItem("option_version", String(data.version));
+        }
+      })
+      .finally(() => {
+        loadOptions();
       });
   }, []);
 
-  /* LOAD CONTACT */
+  /* =========================
+     LOAD CONTACT
+  ========================= */
   useEffect(() => {
     const history: ContactHistory[] = JSON.parse(
       localStorage.getItem("contact_history") || "[]"
@@ -243,6 +296,7 @@ export default function HomePage() {
                   <div key={index} className="grid grid-cols-2 gap-4">
                     <select
                       value={job.company_name}
+                      disabled={optionLoading}
                       onChange={(e) => {
                         const newJobs = [...jobs];
                         newJobs[index] = {
@@ -253,17 +307,22 @@ export default function HomePage() {
                       }}
                       className="border px-3 py-2 rounded"
                     >
-                      <option value="">Chọn công ty</option>
-                      {companies.map((c) => (
-                        <option key={c.id} value={c.name}>
-                          {c.name}
-                        </option>
-                      ))}
+                      <option value="">
+                        {optionLoading
+                          ? "Đang tải công ty..."
+                          : "Chọn công ty"}
+                      </option>
+                      {!optionLoading &&
+                        companies.map((c) => (
+                          <option key={c.id} value={c.name}>
+                            {c.name}
+                          </option>
+                        ))}
                     </select>
 
                     <select
                       value={job.position_name}
-                      disabled={!job.company_name}
+                      disabled={optionLoading || !job.company_name}
                       onChange={(e) => {
                         const selected = jobOptions.find(
                           (j) => j.position === e.target.value
@@ -278,12 +337,17 @@ export default function HomePage() {
                       }}
                       className="border px-3 py-2 rounded"
                     >
-                      <option value="">Chọn công việc</option>
-                      {jobOptions.map((j) => (
-                        <option key={j.code} value={j.position}>
-                          {j.position}
-                        </option>
-                      ))}
+                      <option value="">
+                        {optionLoading
+                          ? "Đang tải công việc..."
+                          : "Chọn công việc"}
+                      </option>
+                      {!optionLoading &&
+                        jobOptions.map((j) => (
+                          <option key={j.code} value={j.position}>
+                            {j.position}
+                          </option>
+                        ))}
                     </select>
                   </div>
                 );
