@@ -43,13 +43,15 @@ export default function HomePage() {
     useState<Template | null>(null);
 
   const [jobs, setJobs] = useState<JobInput[]>([]);
-
   const [companies, setCompanies] = useState<CompanyOption[]>([]);
   const [jobsByCompany, setJobsByCompany] =
     useState<Record<string, JobOption[]>>({});
 
-  // 👉 loading riêng cho option
+  // loading option
   const [optionLoading, setOptionLoading] = useState(true);
+
+  // 👉 CHỈ THÊM STATE NÀY
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [hoverImage, setHoverImage] = useState<string | null>(null);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -76,7 +78,6 @@ export default function HomePage() {
   /* =========================
      LOAD OPTIONS (CACHE + VERSION)
   ========================= */
-
   function loadOptions() {
     const cached = localStorage.getItem("lark_options");
 
@@ -99,7 +100,6 @@ export default function HomePage() {
       .then((data) => {
         setCompanies(data.companies || []);
         setJobsByCompany(data.jobsByCompany || {});
-
         localStorage.setItem(
           "lark_options",
           JSON.stringify({
@@ -117,16 +117,12 @@ export default function HomePage() {
       .then((res) => res.json())
       .then((data) => {
         const localVersion = localStorage.getItem("option_version");
-
         if (localVersion !== String(data.version)) {
-          // 👉 có thay đổi từ n8n
           localStorage.removeItem("lark_options");
           localStorage.setItem("option_version", String(data.version));
         }
       })
-      .finally(() => {
-        loadOptions();
-      });
+      .finally(loadOptions);
   }, []);
 
   /* =========================
@@ -159,7 +155,12 @@ export default function HomePage() {
     setHoverImage(null);
   }
 
+  /* =========================
+     SUBMIT
+  ========================= */
   async function handleSubmit() {
+    if (isSubmitting) return;
+
     if (!jobCount || !selectedTemplate) {
       alert("Vui lòng chọn số job và mẫu ảnh");
       return;
@@ -170,19 +171,20 @@ export default function HomePage() {
       return;
     }
 
-    const payload = {
-      image_title: imageTitle,
-      job_count: jobCount,
-      template_code: selectedTemplate.template_code,
-      jobs,
-      contact: { email, zalo },
-    };
+    setIsSubmitting(true);
+    setResultImage(null);
 
     try {
       const res = await fetch("/api/submit-request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          image_title: imageTitle,
+          job_count: jobCount,
+          template_code: selectedTemplate.template_code,
+          jobs,
+          contact: { email, zalo },
+        }),
       });
 
       if (!res.ok) throw new Error("Webhook error");
@@ -191,6 +193,8 @@ export default function HomePage() {
       setResultImage(Array.isArray(data) ? data[0] : data);
     } catch {
       alert("❌ Gửi dữ liệu thất bại");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -295,7 +299,8 @@ export default function HomePage() {
             ) : (
               <div className="space-y-3 mb-8">
                 {jobs.map((job, index) => {
-                  const jobOptions = jobsByCompany[job.company_name] || [];
+                  const jobOptions =
+                    jobsByCompany[job.company_name] || [];
 
                   return (
                     <div key={index} className="grid grid-cols-2 gap-4">
@@ -348,7 +353,7 @@ export default function HomePage() {
                 })}
               </div>
             )}
-            
+
             {/* STEP 5 */}
             <h3 className="text-lg font-semibold mb-4">
               5️⃣ Thông tin liên hệ
@@ -368,19 +373,31 @@ export default function HomePage() {
               />
             </div>
 
+            {/* BUTTON */}
             <div className="text-center">
               <button
                 onClick={handleSubmit}
-                className="px-8 py-3 bg-orange-500 text-white rounded-lg"
+                disabled={isSubmitting}
+                className={`px-8 py-3 rounded-lg text-white ${
+                  isSubmitting
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-orange-500 hover:bg-orange-600"
+                }`}
               >
-                Tạo ảnh
+                {isSubmitting ? "⏳ Đang tạo ảnh..." : "Tạo ảnh"}
               </button>
+
+              {isSubmitting && (
+                <p className="mt-3 text-sm text-gray-500">
+                  Hệ thống đang xử lý, vui lòng chờ trong giây lát…
+                </p>
+              )}
             </div>
           </>
         )}
       </div>
 
-      {/* RESULT PREVIEW */}
+      {/* RESULT */}
       {resultImage && (
         <div className="max-w-5xl mx-auto mt-12 bg-white rounded-xl p-6 shadow text-center">
           <h3 className="text-lg font-semibold mb-4 text-orange-600">
