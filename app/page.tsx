@@ -219,8 +219,8 @@ export default function HomePage() {
 
       {/* ================= FORM ================= */}
       <div className="max-w-5xl mx-auto bg-white rounded-xl p-8 shadow">
-        <h1 className="text-2xl font-bold mb-6">
-          Chọn mẫu ảnh & cấu hình job
+        <h1 className="text-3xl font-bold mb-8 text-orange-500 text-center">
+          TẠO ẢNH TỰ ĐỘNG
         </h1>
 
         {/* STEP 1 */}
