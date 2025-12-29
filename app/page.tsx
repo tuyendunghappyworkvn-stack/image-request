@@ -47,10 +47,7 @@ export default function HomePage() {
   const [jobsByCompany, setJobsByCompany] =
     useState<Record<string, JobOption[]>>({});
 
-  // loading option
   const [optionLoading, setOptionLoading] = useState(true);
-
-  // 👉 CHỈ THÊM STATE NÀY
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [hoverImage, setHoverImage] = useState<string | null>(null);
@@ -200,6 +197,27 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#FFF6ED] p-8">
+      {/* ================= HEADER ================= */}
+      <header className="max-w-5xl mx-auto mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img
+            src="/logo.png"
+            alt="Happywork"
+            className="h-10 w-auto"
+          />
+        </div>
+
+        <a
+          href="https://image-request-eta.vercel.app/admin/template"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 py-2 border border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 font-medium"
+        >
+          Admin
+        </a>
+      </header>
+
+      {/* ================= FORM ================= */}
       <div className="max-w-5xl mx-auto bg-white rounded-xl p-8 shadow">
         <h1 className="text-2xl font-bold mb-6">
           Chọn mẫu ảnh & cấu hình job
