@@ -146,17 +146,31 @@ export default function AdminTemplatePage() {
             />
           </div>
 
-          {/* ✅ CHECKBOX TEXT JD */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="textJD"
-              checked={textJD}
-              onChange={(e) => setTextJD(e.target.checked)}
-              className="w-4 h-4"
-            />
-            <label htmlFor="textJD" className="text-sm font-medium">
-              Có text JD
+          {/* ✅ TEXT JD (checkbox dạng input) */}
+          <div>
+            <label className="font-medium block mb-1">Text JD</label>
+
+            <label
+              className="
+                flex items-center gap-3
+                border rounded-lg px-3 py-3
+                cursor-pointer
+                hover:border-green-500
+              "
+            >
+              <input
+                type="checkbox"
+                checked={hasTextJD}
+                onChange={(e) => setHasTextJD(e.target.checked)}
+                className="
+                  w-5 h-5
+                  accent-green-500
+                  cursor-pointer
+                "
+              />
+              <span className="text-sm select-none">
+                Có text JD
+              </span>
             </label>
           </div>
 
