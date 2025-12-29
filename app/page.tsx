@@ -219,7 +219,7 @@ export default function HomePage() {
 
       {/* ================= FORM ================= */}
       <div className="max-w-5xl mx-auto bg-white rounded-xl p-8 shadow">
-        <h1 className="text-5xl font-extrabold mb-10 text-orange-500 text-center tracking-wide">
+        <h1 className="text-[42px] font-semibold mb-10 text-gray-900 text-center tracking-tight">
           TẠO ẢNH TỰ ĐỘNG
         </h1>
 
