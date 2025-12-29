@@ -3,6 +3,9 @@ import { put } from "@vercel/blob";
 
 export const runtime = "nodejs";
 
+/* =========================
+   GET TENANT TOKEN
+========================= */
 async function getTenantToken() {
   const res = await fetch(
     "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
@@ -20,18 +23,32 @@ async function getTenantToken() {
   return data.tenant_access_token;
 }
 
+/* =========================
+   CREATE TEMPLATE
+========================= */
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
 
+    /* ===== BASIC DATA ===== */
     const file = formData.get("file") as File;
     const style = String(formData.get("style") || "").trim();
-    const jobCount =
-  Number(formData.get("jobCount")) ||
-  Number(formData.get("job_count")) ||
-  Number(formData.get("job"));
 
-    // ✅ FIX LỖI jobCount = 0
+    const jobCount =
+      Number(formData.get("jobCount")) ||
+      Number(formData.get("job_count")) ||
+      Number(formData.get("job"));
+
+    /* ===== NEW FIELDS ===== */
+    const presentationId = String(
+      formData.get("presentation_id") || ""
+    ).trim();
+
+    const slideIdMau = String(
+      formData.get("slide_id_mau") || ""
+    ).trim();
+
+    // ✅ validate
     if (!file || !style || Number.isNaN(jobCount)) {
       return NextResponse.json(
         { error: "Missing file / style / jobCount" },
@@ -39,18 +56,25 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1️⃣ Upload ảnh lên Vercel Blob
+    /* =========================
+       1️⃣ UPLOAD IMAGE → BLOB
+    ========================= */
     const templateCode = `${style}_${jobCount}`;
+
     const blob = await put(
       `templates/${templateCode}-${Date.now()}.png`,
       file,
       { access: "public" }
     );
 
-    // 2️⃣ Lấy tenant token
+    /* =========================
+       2️⃣ GET TOKEN
+    ========================= */
     const tenantToken = await getTenantToken();
 
-    // 3️⃣ Ghi record vào Lark Base
+    /* =========================
+       3️⃣ CREATE LARK RECORD
+    ========================= */
     const larkRes = await fetch(
       `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_BASE_ID}/tables/${process.env.LARK_TABLE_ID}/records`,
       {
@@ -66,6 +90,10 @@ export async function POST(req: Request) {
             job_count: Number(jobCount),
             thumbnail: blob.url,
             is_active: true,
+
+            // ✅ NEW COLUMNS
+            PresentationID: presentationId,
+            slideID_mau: slideIdMau,
           },
         }),
       }
