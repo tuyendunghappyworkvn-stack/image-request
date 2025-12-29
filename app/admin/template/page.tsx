@@ -8,7 +8,7 @@ export default function AdminTemplatePage() {
   const [style, setStyle] = useState("");
   const [jobCount, setJobCount] = useState<number>(0);
 
-  // ✅ STATE MỚI: TEXT JD
+  // ✅ STATE TEXT JD
   const [textJD, setTextJD] = useState<boolean>(false);
 
   // ✅ 2 STATE CŨ
@@ -55,11 +55,7 @@ export default function AdminTemplatePage() {
     formData.append("template_code", templateCode);
     formData.append("style", style);
     formData.append("job_count", String(jobCount));
-
-    // ✅ GỬI TEXT JD
     formData.append("text_jd", textJD ? "true" : "false");
-
-    // ✅ 2 BIẾN CŨ
     formData.append("presentation_id", presentationId);
     formData.append("slide_id_mau", slideIdMau);
 
@@ -146,31 +142,21 @@ export default function AdminTemplatePage() {
             />
           </div>
 
-          {/* ✅ TEXT JD (checkbox dạng input) */}
+          {/* ✅ CHECKBOX TEXT JD – TO, ĐẸP, VIỀN INPUT */}
           <div>
-            <label className="font-medium block mb-1">Text JD</label>
-
+            <label className="font-medium mb-1 block">Text JD</label>
             <label
-              className="
-                flex items-center gap-3
-                border rounded-lg px-3 py-3
-                cursor-pointer
-                hover:border-green-500
-              "
+              htmlFor="textJD"
+              className="flex items-center gap-3 border rounded-lg px-3 py-2 cursor-pointer select-none"
             >
               <input
                 type="checkbox"
-                checked={hasTextJD}
-                onChange={(e) => setHasTextJD(e.target.checked)}
-                className="
-                  w-5 h-5
-                  accent-green-500
-                  cursor-pointer
-                "
+                id="textJD"
+                checked={textJD}
+                onChange={(e) => setTextJD(e.target.checked)}
+                className="w-5 h-5 accent-green-500"
               />
-              <span className="text-sm select-none">
-                Có text JD
-              </span>
+              <span className="text-sm font-medium">Có text JD</span>
             </label>
           </div>
 
