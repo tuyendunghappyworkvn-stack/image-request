@@ -25,7 +25,7 @@ export async function POST(req: Request) {
        GỌI WEBHOOK N8N (ADMIN)
     ========================= */
     await fetch(
-      "https://n8n.happywork.com.vn/webhook-test/nhan_ban_slide_edit",
+      "https://n8n.happywork.com.vn/webhook/nhan_ban_slide_edit",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
