@@ -51,13 +51,13 @@ export async function POST(req: Request) {
     const textJD =
       String(formData.get("text_jd") || "").toLowerCase() === "true";
 
-    /* ===== 4 FIELD MỚI (ĐÃ CÓ – GIỮ NGUYÊN) ===== */
+    /* ===== 4 FIELD ĐÃ CÓ (GIỮ NGUYÊN) ===== */
     const congViecLimit = Number(formData.get("cong_viec_limit") || 0);
     const quyenLoiLimit = Number(formData.get("quyen_loi_limit") || 0);
     const yeuCauLimit = Number(formData.get("yeu_cau_limit") || 0);
     const dauDong = String(formData.get("Dấu đầu dòng") || "");
 
-    /* ===== 🆕 LINK SLIDE MẪU (CHỈ THÊM) ===== */
+    /* ===== LINK SLIDE MẪU ===== */
     const slideLink = String(formData.get("slide_link") || "");
 
     /* ===== VALIDATE (GIỮ NGUYÊN) ===== */
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
 
     /* =========================
        3️⃣ CREATE LARK RECORD
-       (CHỈ THÊM CỘT – KHÔNG ĐỔI LOGIC)
+       (GIỮ NGUYÊN LOGIC)
     ========================= */
     const larkRes = await fetch(
       `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_BASE_ID}/tables/${process.env.LARK_TABLE_ID}/records`,
@@ -104,18 +104,18 @@ export async function POST(req: Request) {
             thumbnail: blob.url,
             is_active: true,
 
-            // 🔒 CỘT CŨ – GIỮ NGUYÊN
+            // 🔒 CỘT CŨ
             PresentationID: presentationId,
             slideID_mau: slideIdMau,
             text_jd: textJD,
 
-            // 🔒 4 CỘT ĐÃ THÊM TRƯỚC ĐÓ
+            // 🔒 CỘT GIỚI HẠN
             cong_viec_limit: congViecLimit,
             quyen_loi_limit: quyenLoiLimit,
             yeu_cau_limit: yeuCauLimit,
             "Dấu đầu dòng": dauDong,
 
-            // ✅ 🆕 CỘT MỚI: LINK SLIDE MẪU
+            // 🔒 LINK SLIDE MẪU
             "Link slide mẫu": slideLink,
           },
         }),
@@ -124,6 +124,36 @@ export async function POST(req: Request) {
 
     const larkData = await larkRes.json();
 
+    /* =========================
+       4️⃣ GỌI WEBHOOK N8N
+       (CHỈ GỬI DATA – KHÔNG ẢNH HƯỞNG USER)
+    ========================= */
+    if (presentationId && slideIdMau) {
+      try {
+        const n8nRes = await fetch(
+          "https://n8n.happywork.com.vn/webhook/nhan_ban_slide_edit",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              PresentationID: presentationId,
+              slideID_mau: slideIdMau,
+            }),
+          }
+        );
+
+        const n8nText = await n8nRes.text();
+        console.log("✅ N8N webhook response:", n8nRes.status, n8nText);
+      } catch (err) {
+        console.error("❌ Call n8n webhook failed:", err);
+      }
+    }
+
+    /* =========================
+       RESPONSE
+    ========================= */
     return NextResponse.json({
       success: true,
       template_code: templateCode,
