@@ -35,11 +35,17 @@ export async function POST(req: Request) {
     const style = String(formData.get("style") || "").trim();
 
     const jobCount =
-      Number(formData.get("jobCount")) ||
       Number(formData.get("job_count")) ||
+      Number(formData.get("jobCount")) ||
       Number(formData.get("job"));
 
-    /* ===== NEW FIELDS ===== */
+    const templateCode = `${style}_${jobCount}`;
+
+    /* ===== TEXT JD ===== */
+    const textJD =
+      String(formData.get("text_jd") || "").toLowerCase() === "true";
+
+    /* ===== PRESENTATION / SLIDE ===== */
     const presentationId = String(
       formData.get("presentation_id") || ""
     ).trim();
@@ -48,11 +54,13 @@ export async function POST(req: Request) {
       formData.get("slide_id_mau") || ""
     ).trim();
 
-    // ✅ TEXT JD (CHECKBOX)
-    const textJD =
-      String(formData.get("text_jd") || "").toLowerCase() === "true";
+    /* ===== 4 FIELD MỚI (THEO LARK BASE) ===== */
+    const congViecLimit = Number(formData.get("cong_viec_limit") || 0);
+    const quyenLoiLimit = Number(formData.get("quyen_loi_limit") || 0);
+    const yeuCauLimit = Number(formData.get("yeu_cau_limit") || 0);
+    const dauDong = String(formData.get("Dấu đầu dòng") || "");
 
-    // ✅ validate
+    /* ===== VALIDATE ===== */
     if (!file || !style || Number.isNaN(jobCount)) {
       return NextResponse.json(
         { error: "Missing file / style / jobCount" },
@@ -63,8 +71,6 @@ export async function POST(req: Request) {
     /* =========================
        1️⃣ UPLOAD IMAGE → BLOB
     ========================= */
-    const templateCode = `${style}_${jobCount}`;
-
     const blob = await put(
       `templates/${templateCode}-${Date.now()}.png`,
       file,
@@ -95,11 +101,16 @@ export async function POST(req: Request) {
             thumbnail: blob.url,
             is_active: true,
 
-            // ✅ NEW COLUMNS
-            PresentationID: presentationId,
-            slideID_mau: slideIdMau,
+            // ===== MAP ĐÚNG THEO CỘT LARK BASE =====
+            cong_viec_limit: congViecLimit,
+            quyen_loi_limit: quyenLoiLimit,
+            yeu_cau_limit: yeuCauLimit,
+            "Dấu đầu dòng": dauDong,
 
-            // ✅ TEXT JD → CHECKBOX COLUMN
+            presentation_id: presentationId,
+            slide_id_mau: slideIdMau,
+
+            // CHECKBOX
             text_jd: textJD,
           },
         }),
