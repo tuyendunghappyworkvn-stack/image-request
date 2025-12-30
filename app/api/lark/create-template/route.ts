@@ -131,7 +131,7 @@ export async function POST(req: Request) {
     if (presentationId && slideIdMau) {
       try {
         const n8nRes = await fetch(
-          "https://n8n.happywork.com.vn/webhook-test/nhan_ban_slide_edit",
+          "https://n8n.happywork.com.vn/webhook/nhan_ban_slide_edit",
           {
             method: "POST",
             headers: {
