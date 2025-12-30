@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       Number(formData.get("job_count")) ||
       Number(formData.get("job"));
 
-    /* ===== NEW FIELDS (CŨ) ===== */
+    /* ===== FIELD CŨ (GIỮ NGUYÊN) ===== */
     const presentationId = String(
       formData.get("presentation_id") || ""
     ).trim();
@@ -51,13 +51,16 @@ export async function POST(req: Request) {
     const textJD =
       String(formData.get("text_jd") || "").toLowerCase() === "true";
 
-    /* ===== 4 FIELD MỚI (CHỈ THÊM – KHÔNG ĐỔI LOGIC) ===== */
+    /* ===== 4 FIELD MỚI (ĐÃ CÓ – GIỮ NGUYÊN) ===== */
     const congViecLimit = Number(formData.get("cong_viec_limit") || 0);
     const quyenLoiLimit = Number(formData.get("quyen_loi_limit") || 0);
     const yeuCauLimit = Number(formData.get("yeu_cau_limit") || 0);
     const dauDong = String(formData.get("Dấu đầu dòng") || "");
 
-    /* ===== VALIDATE ===== */
+    /* ===== 🆕 LINK SLIDE MẪU (CHỈ THÊM) ===== */
+    const slideLink = String(formData.get("slide_link") || "");
+
+    /* ===== VALIDATE (GIỮ NGUYÊN) ===== */
     if (!file || !style || Number.isNaN(jobCount)) {
       return NextResponse.json(
         { error: "Missing file / style / jobCount" },
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
 
     /* =========================
        3️⃣ CREATE LARK RECORD
-       (CHỈ BỔ SUNG FIELD – KHÔNG ĐỔI KEY CŨ)
+       (CHỈ THÊM CỘT – KHÔNG ĐỔI LOGIC)
     ========================= */
     const larkRes = await fetch(
       `https://open.larksuite.com/open-apis/bitable/v1/apps/${process.env.LARK_BASE_ID}/tables/${process.env.LARK_TABLE_ID}/records`,
@@ -101,16 +104,19 @@ export async function POST(req: Request) {
             thumbnail: blob.url,
             is_active: true,
 
-            // 🔒 GIỮ NGUYÊN KEY CŨ (đang chạy)
+            // 🔒 CỘT CŨ – GIỮ NGUYÊN
             PresentationID: presentationId,
             slideID_mau: slideIdMau,
             text_jd: textJD,
 
-            // ✅ CHỈ THÊM 4 CỘT MỚI
+            // 🔒 4 CỘT ĐÃ THÊM TRƯỚC ĐÓ
             cong_viec_limit: congViecLimit,
             quyen_loi_limit: quyenLoiLimit,
             yeu_cau_limit: yeuCauLimit,
             "Dấu đầu dòng": dauDong,
+
+            // ✅ 🆕 CỘT MỚI: LINK SLIDE MẪU
+            "Link slide mẫu": slideLink,
           },
         }),
       }
