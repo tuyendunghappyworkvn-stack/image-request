@@ -17,12 +17,33 @@ export default function AdminTemplatePage() {
   const [yeuCauLimit, setYeuCauLimit] = useState<number>(0);
   const [dauDong, setDauDong] = useState<string>("");
 
-  // ✅ 2 FIELD CŨ
+  // ✅ 2 FIELD CŨ (GIỮ NGUYÊN – KHÔNG CHO USER NHẬP TAY)
   const [presentationId, setPresentationId] = useState("");
   const [slideIdMau, setSlideIdMau] = useState("");
 
+  // ✅ LINK SLIDE MẪU (NEW)
+  const [slideLink, setSlideLink] = useState("");
+
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  /* =========================
+     PARSE GOOGLE SLIDE LINK
+     (CHỈ THÊM – KHÔNG ĐỘNG LOGIC CŨ)
+  ========================= */
+  function parseGoogleSlideLink(link: string) {
+    try {
+      const presentationMatch = link.match(/\/d\/([^/]+)\//);
+      const slideMatch = link.match(/slide=id\.([a-zA-Z0-9_]+)/);
+
+      return {
+        presentationId: presentationMatch?.[1] || "",
+        slideId: slideMatch?.[1] || "",
+      };
+    } catch {
+      return { presentationId: "", slideId: "" };
+    }
+  }
 
   function resetForm() {
     setFile(null);
@@ -38,6 +59,7 @@ export default function AdminTemplatePage() {
 
     setPresentationId("");
     setSlideIdMau("");
+    setSlideLink("");
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -53,7 +75,7 @@ export default function AdminTemplatePage() {
     }
 
     if (!presentationId || !slideIdMau) {
-      alert("Vui lòng nhập Presentation ID và Slide ID mẫu");
+      alert("Link slide mẫu không hợp lệ hoặc thiếu slide ID");
       return;
     }
 
@@ -67,14 +89,18 @@ export default function AdminTemplatePage() {
     formData.append("job_count", String(jobCount));
     formData.append("text_jd", textJD ? "true" : "false");
 
-    // ✅ MAP ĐÚNG THEO CỘT LARK BASE
+    // ✅ 4 FIELD MỚI
     formData.append("cong_viec_limit", String(congViecLimit));
     formData.append("quyen_loi_limit", String(quyenLoiLimit));
     formData.append("yeu_cau_limit", String(yeuCauLimit));
     formData.append("Dấu đầu dòng", dauDong);
 
+    // ✅ CỘT CŨ – GIỮ NGUYÊN
     formData.append("presentation_id", presentationId);
     formData.append("slide_id_mau", slideIdMau);
+
+    // ✅ LINK SLIDE MẪU (NEW – để lưu Lark Base)
+    formData.append("slide_link", slideLink);
 
     try {
       const res = await fetch("/api/lark/create-template", {
@@ -177,9 +203,7 @@ export default function AdminTemplatePage() {
             </label>
           </div>
 
-          {/* =====================
-              4 Ô MỚI
-          ===================== */}
+          {/* 4 Ô MỚI */}
           <div>
             <label className="font-medium">Giới hạn dòng – Công việc</label>
             <input
@@ -225,28 +249,30 @@ export default function AdminTemplatePage() {
             </select>
           </div>
 
-          {/* PRESENTATION ID */}
+          {/* LINK SLIDE MẪU (NEW) */}
           <div>
-            <label className="font-medium">Presentation ID</label>
+            <label className="font-medium">Link slide mẫu</label>
             <input
               className="mt-1 w-full border rounded-lg px-3 py-2"
-              placeholder="VD: 1mWNJFYmH5N9IXc51..."
-              value={presentationId}
-              onChange={(e) => setPresentationId(e.target.value)}
-              required
-            />
-          </div>
+              placeholder="Dán link Google Slide mẫu vào đây"
+              value={slideLink}
+              onChange={(e) => {
+                const link = e.target.value;
+                setSlideLink(link);
 
-          {/* SLIDE ID */}
-          <div>
-            <label className="font-medium">Slide ID mẫu</label>
-            <input
-              className="mt-1 w-full border rounded-lg px-3 py-2"
-              placeholder="VD: g3a6c548bc07_0_1"
-              value={slideIdMau}
-              onChange={(e) => setSlideIdMau(e.target.value)}
+                const parsed = parseGoogleSlideLink(link);
+                setPresentationId(parsed.presentationId);
+                setSlideIdMau(parsed.slideId);
+              }}
               required
             />
+
+            {(presentationId || slideIdMau) && (
+              <p className="text-xs text-gray-500 mt-1">
+                PresentationID: <b>{presentationId || "—"}</b> | SlideID:{" "}
+                <b>{slideIdMau || "—"}</b>
+              </p>
+            )}
           </div>
 
           <button
