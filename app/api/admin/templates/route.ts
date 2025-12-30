@@ -11,24 +11,21 @@ export async function POST(req: Request) {
 
     if (!presentationId || !slideID_mau) {
       return NextResponse.json(
-        { success: false, message: "Missing data" },
+        { success: false, message: "Missing PresentationID or slideID_mau" },
         { status: 400 }
       );
     }
 
     /* =========================
-       TODO: UPLOAD TEMPLATE
-       (ảnh, style, jobCount...)
+       GỌI WEBHOOK N8N (PRODUCTION)
     ========================= */
-
-    /* =========================
-       GỌI WEBHOOK N8N (ADMIN)
-    ========================= */
-    await fetch(
+    const res = await fetch(
       "https://n8n.happywork.com.vn/webhook/nhan_ban_slide_edit",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           PresentationID: presentationId,
           slideID_mau: slideID_mau,
@@ -36,14 +33,17 @@ export async function POST(req: Request) {
       }
     );
 
+    const text = await res.text();
+    console.log("✅ N8N response:", res.status, text);
+
     return NextResponse.json({
       success: true,
-      message: "Admin upload + trigger n8n OK",
+      message: "Sent data to n8n webhook successfully",
     });
   } catch (err) {
-    console.error("❌ ADMIN upload error:", err);
+    console.error("❌ ADMIN template POST error:", err);
     return NextResponse.json(
-      { success: false },
+      { success: false, error: "Server error" },
       { status: 500 }
     );
   }
