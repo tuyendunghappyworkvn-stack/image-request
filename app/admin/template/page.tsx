@@ -8,15 +8,20 @@ export default function AdminTemplatePage() {
   const [style, setStyle] = useState("");
   const [jobCount, setJobCount] = useState<number>(0);
 
-  // ✅ STATE TEXT JD
+  // ✅ TEXT JD
   const [textJD, setTextJD] = useState<boolean>(false);
 
-  // ✅ 2 STATE CŨ
+  // ✅ 4 FIELD MỚI
+  const [congViecLimit, setCongViecLimit] = useState<number>(0);
+  const [quyenLoiLimit, setQuyenLoiLimit] = useState<number>(0);
+  const [yeuCauLimit, setYeuCauLimit] = useState<number>(0);
+  const [dauDong, setDauDong] = useState<string>("");
+
+  // ✅ 2 FIELD CŨ
   const [presentationId, setPresentationId] = useState("");
   const [slideIdMau, setSlideIdMau] = useState("");
 
   const [loading, setLoading] = useState(false);
-
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   function resetForm() {
@@ -25,6 +30,12 @@ export default function AdminTemplatePage() {
     setStyle("");
     setJobCount(0);
     setTextJD(false);
+
+    setCongViecLimit(0);
+    setQuyenLoiLimit(0);
+    setYeuCauLimit(0);
+    setDauDong("");
+
     setPresentationId("");
     setSlideIdMau("");
 
@@ -47,7 +58,6 @@ export default function AdminTemplatePage() {
     }
 
     const templateCode = `${style}_${jobCount}`;
-
     setLoading(true);
 
     const formData = new FormData();
@@ -56,6 +66,13 @@ export default function AdminTemplatePage() {
     formData.append("style", style);
     formData.append("job_count", String(jobCount));
     formData.append("text_jd", textJD ? "true" : "false");
+
+    // ✅ MAP ĐÚNG THEO CỘT LARK BASE
+    formData.append("cong_viec_limit", String(congViecLimit));
+    formData.append("quyen_loi_limit", String(quyenLoiLimit));
+    formData.append("yeu_cau_limit", String(yeuCauLimit));
+    formData.append("Dấu đầu dòng", dauDong);
+
     formData.append("presentation_id", presentationId);
     formData.append("slide_id_mau", slideIdMau);
 
@@ -142,7 +159,7 @@ export default function AdminTemplatePage() {
             />
           </div>
 
-          {/* ✅ CHECKBOX TEXT JD – TO, ĐẸP, VIỀN INPUT */}
+          {/* TEXT JD */}
           <div>
             <label className="font-medium mb-1 block">Text JD</label>
             <label
@@ -160,6 +177,54 @@ export default function AdminTemplatePage() {
             </label>
           </div>
 
+          {/* =====================
+              4 Ô MỚI
+          ===================== */}
+          <div>
+            <label className="font-medium">Giới hạn dòng – Công việc</label>
+            <input
+              type="number"
+              className="mt-1 w-full border rounded-lg px-3 py-2"
+              value={congViecLimit}
+              onChange={(e) => setCongViecLimit(Number(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="font-medium">Giới hạn dòng – Quyền lợi</label>
+            <input
+              type="number"
+              className="mt-1 w-full border rounded-lg px-3 py-2"
+              value={quyenLoiLimit}
+              onChange={(e) => setQuyenLoiLimit(Number(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="font-medium">Giới hạn dòng – Yêu cầu</label>
+            <input
+              type="number"
+              className="mt-1 w-full border rounded-lg px-3 py-2"
+              value={yeuCauLimit}
+              onChange={(e) => setYeuCauLimit(Number(e.target.value))}
+            />
+          </div>
+
+          <div>
+            <label className="font-medium">Dấu đầu dòng</label>
+            <select
+              className="mt-1 w-full border rounded-lg px-3 py-2"
+              value={dauDong}
+              onChange={(e) => setDauDong(e.target.value)}
+            >
+              <option value="">Trống</option>
+              <option value=".">Dấu chấm (.)</option>
+              <option value="-">Dấu gạch (-)</option>
+              <option value="*">Dấu sao (*)</option>
+              <option value="+">Dấu cộng (+)</option>
+            </select>
+          </div>
+
           {/* PRESENTATION ID */}
           <div>
             <label className="font-medium">Presentation ID</label>
@@ -172,7 +237,7 @@ export default function AdminTemplatePage() {
             />
           </div>
 
-          {/* SLIDE ID MẪU */}
+          {/* SLIDE ID */}
           <div>
             <label className="font-medium">Slide ID mẫu</label>
             <input
