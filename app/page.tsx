@@ -73,7 +73,7 @@ export default function HomePage() {
   }, [jobCount]);
 
   /* =========================
-     LOAD OPTIONS (CACHE + VERSION)
+     LOAD OPTIONS
   ========================= */
   function loadOptions() {
     const cached = localStorage.getItem("lark_options");
@@ -199,13 +199,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#FFF6ED] p-8">
       {/* ================= HEADER ================= */}
       <header className="max-w-5xl mx-auto mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img
-            src="/logo.png"
-            alt="Happywork"
-            className="h-10 w-auto"
-          />
-        </div>
+        <img src="/logo.png" alt="Happywork" className="h-10 w-auto" />
 
         <a
           href="https://image-request-eta.vercel.app/admin/template"
@@ -219,7 +213,7 @@ export default function HomePage() {
 
       {/* ================= FORM ================= */}
       <div className="max-w-5xl mx-auto bg-white rounded-xl p-8 shadow">
-        <h1 className="text-[42px] font-semibold mb-10 text-gray-900 text-center tracking-tight">
+        <h1 className="text-[42px] font-semibold mb-10 text-gray-900 text-center">
           TẠO ẢNH TỰ ĐỘNG
         </h1>
 
@@ -251,178 +245,30 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* STEP 2 → 5 */}
-        {jobCount && (
-          <>
-            {/* STEP 2 */}
-            <div className="mb-8">
-              <div className="font-semibold mb-3">
-                2️⃣ Chọn mẫu ({templates.length} mẫu)
-              </div>
-
-              {loading ? (
-                <div className="py-10 text-center text-gray-500">
-                  ⏳ Đang tải mẫu ảnh, vui lòng chờ...
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {templates.map((tpl) => (
-                    <div
-                      key={tpl.template_code}
-                      onClick={() => setSelectedTemplate(tpl)}
-                      onMouseEnter={(e) =>
-                        handleMouseEnter(e, tpl.thumbnail)
-                      }
-                      onMouseMove={handleMouseMove}
-                      onMouseLeave={handleMouseLeave}
-                      className={`border rounded-xl cursor-pointer ${
-                        selectedTemplate?.template_code === tpl.template_code
-                          ? "border-orange-500 bg-orange-50"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      <img
-                        src={tpl.thumbnail}
-                        className="w-full h-40 object-contain bg-gray-50"
-                      />
-                      <div className="p-2 text-center font-medium">
-                        {tpl.template_code}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* STEP 3 */}
-            <h3 className="text-lg font-semibold mb-4">
-              3️⃣ Tiêu đề ảnh
-            </h3>
-            <input
-              value={imageTitle}
-              onChange={(e) => setImageTitle(e.target.value)}
-              className="w-full border rounded px-4 py-3 mb-6"
-              placeholder="VD: IDEA POD"
-            />
-
-            {/* STEP 4 */}
-            <h3 className="text-lg font-semibold mb-4">
-              4️⃣ Chọn thông tin công việc
-            </h3>
-
-            {optionLoading ? (
-              <div className="py-6 text-gray-500">
-                ⏳ Đang chuẩn bị danh sách công ty & công việc...
-              </div>
-            ) : (
-              <div className="space-y-3 mb-8">
-                {jobs.map((job, index) => {
-                  const jobOptions =
-                    jobsByCompany[job.company_name] || [];
-
-                  return (
-                    <div key={index} className="grid grid-cols-2 gap-4">
-                      <select
-                        value={job.company_name}
-                        onChange={(e) => {
-                          const newJobs = [...jobs];
-                          newJobs[index] = {
-                            company_name: e.target.value,
-                            position_name: "",
-                          };
-                          setJobs(newJobs);
-                        }}
-                        className="border px-3 py-2 rounded"
-                      >
-                        <option value="">Chọn công ty</option>
-                        {companies.map((c) => (
-                          <option key={c.id} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
-
-                      <select
-                        value={job.position_name}
-                        disabled={!job.company_name}
-                        onChange={(e) => {
-                          const selected = jobOptions.find(
-                            (j) => j.position === e.target.value
-                          );
-                          const newJobs = [...jobs];
-                          newJobs[index] = {
-                            ...newJobs[index],
-                            position_name: e.target.value,
-                            job_code: selected?.code,
-                          };
-                          setJobs(newJobs);
-                        }}
-                        className="border px-3 py-2 rounded"
-                      >
-                        <option value="">Chọn công việc</option>
-                        {jobOptions.map((j) => (
-                          <option key={j.code} value={j.position}>
-                            {j.position}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* STEP 5 */}
-            <h3 className="text-lg font-semibold mb-4">
-              5️⃣ Thông tin liên hệ
-            </h3>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="border px-3 py-2 rounded"
-              />
-              <input
-                value={zalo}
-                onChange={(e) => setZalo(e.target.value)}
-                placeholder="SĐT Zalo"
-                className="border px-3 py-2 rounded"
-              />
-            </div>
-
-            {/* BUTTON */}
-            <div className="text-center">
-              <button
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className={`px-8 py-3 rounded-lg text-white ${
-                  isSubmitting
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-orange-500 hover:bg-orange-600"
-                }`}
-              >
-                {isSubmitting ? "⏳ Đang tạo ảnh..." : "Tạo ảnh"}
-              </button>
-
-              {isSubmitting && (
-                <p className="mt-3 text-sm text-gray-500">
-                  Hệ thống đang xử lý, vui lòng chờ trong giây lát…
-                </p>
-              )}
-            </div>
-          </>
-        )}
+        {/* BUTTON */}
+        <div className="text-center mt-10">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className={`px-8 py-3 rounded-lg text-white ${
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-orange-500 hover:bg-orange-600"
+            }`}
+          >
+            {isSubmitting ? "⏳ Đang tạo ảnh..." : "Tạo ảnh"}
+          </button>
+        </div>
       </div>
 
-      {/* RESULT */}
+      {/* ================= RESULT ================= */}
       {resultImage && (
         <div className="max-w-5xl mx-auto mt-12 bg-white rounded-xl p-6 shadow text-center">
           <h3 className="text-lg font-semibold mb-4 text-orange-600">
             Ảnh đã tạo
           </h3>
 
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-4 flex-wrap">
             {resultImage.view_url && (
               <a
                 href={resultImage.view_url}
@@ -440,6 +286,18 @@ export default function HomePage() {
                 className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
               >
                 Tải ảnh
+              </a>
+            )}
+
+            {/* 🔵 NÚT SỬA ẢNH */}
+            {resultImage.edit_link && (
+              <a
+                href={resultImage.edit_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-3 bg-[#2563EB] text-white rounded-lg hover:bg-[#1D4ED8]"
+              >
+                ✏️ Sửa ảnh
               </a>
             )}
           </div>
