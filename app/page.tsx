@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Select from "react-select";
 
 type Template = {
   template_code: string;
@@ -322,25 +323,28 @@ export default function HomePage() {
 
                   return (
                     <div key={index} className="grid grid-cols-2 gap-4">
-                      <select
-                        value={job.company_name}
-                        onChange={(e) => {
+                      <Select
+                        className="w-full"
+                        options={companies.map((c) => ({
+                          value: c.name,
+                          label: c.name,
+                        }))}
+                        placeholder="Gõ để tìm công ty..."
+                        isClearable
+                        value={
+                          job.company_name
+                            ? { value: job.company_name, label: job.company_name }
+                            : null
+                        }
+                        onChange={(option) => {
                           const newJobs = [...jobs];
                           newJobs[index] = {
-                            company_name: e.target.value,
+                            company_name: option ? option.value : "",
                             position_name: "",
                           };
                           setJobs(newJobs);
                         }}
-                        className="border px-3 py-2 rounded"
-                      >
-                        <option value="">Chọn công ty</option>
-                        {companies.map((c) => (
-                          <option key={c.id} value={c.name}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
 
                       <select
                         value={job.position_name}
