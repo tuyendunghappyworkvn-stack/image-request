@@ -125,33 +125,6 @@ export async function POST(req: Request) {
     const larkData = await larkRes.json();
 
     /* =========================
-       4️⃣ GỌI WEBHOOK N8N
-       (CHỈ GỬI DATA – KHÔNG ẢNH HƯỞNG USER)
-    ========================= */
-    if (presentationId && slideIdMau) {
-      try {
-        const n8nRes = await fetch(
-          "https://n8n.happywork.com.vn/webhook/nhan_ban_slide_edit",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              PresentationID: presentationId,
-              slideID_mau: slideIdMau,
-            }),
-          }
-        );
-
-        const n8nText = await n8nRes.text();
-        console.log("✅ N8N webhook response:", n8nRes.status, n8nText);
-      } catch (err) {
-        console.error("❌ Call n8n webhook failed:", err);
-      }
-    }
-
-    /* =========================
        RESPONSE
     ========================= */
     return NextResponse.json({
