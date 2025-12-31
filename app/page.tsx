@@ -1,7 +1,6 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
 import Select from "react-select";
+import { useEffect, useRef, useState } from "react";
 
 type Template = {
   template_code: string;
@@ -323,6 +322,7 @@ export default function HomePage() {
 
                   return (
                     <div key={index} className="grid grid-cols-2 gap-4">
+                      {/* ===== CHỌN CÔNG TY (CÓ GÕ TÌM) ===== */}
                       <Select
                         className="w-full"
                         options={companies.map((c) => ({
@@ -333,7 +333,10 @@ export default function HomePage() {
                         isClearable
                         value={
                           job.company_name
-                            ? { value: job.company_name, label: job.company_name }
+                            ? {
+                                value: job.company_name,
+                                label: job.company_name,
+                              }
                             : null
                         }
                         onChange={(option) => {
@@ -346,6 +349,7 @@ export default function HomePage() {
                         }}
                       />
 
+                      {/* ===== CHỌN CÔNG VIỆC (GIỮ NGUYÊN LOGIC CŨ) ===== */}
                       <select
                         value={job.position_name}
                         disabled={!job.company_name}
